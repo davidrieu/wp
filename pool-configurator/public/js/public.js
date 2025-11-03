@@ -561,6 +561,7 @@ jQuery(document).ready(function($) {
             const element = $(this);
             const text = element.data('text');
             const delay = element.data('delay') || 0;
+            const isTitle = element.hasClass('step-title');
 
             // Réinitialiser
             element.text('');
@@ -568,7 +569,7 @@ jQuery(document).ready(function($) {
 
             setTimeout(function() {
                 let i = 0;
-                const speed = 50; // Vitesse de frappe (ms par caractère)
+                const speed = isTitle ? 30 : 25; // Plus rapide : 30ms pour titre, 25ms pour description
 
                 function type() {
                     if (i < text.length) {
