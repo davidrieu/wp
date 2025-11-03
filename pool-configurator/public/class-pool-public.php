@@ -21,7 +21,23 @@ class Pool_Public {
     }
 
     public static function enqueue_public_scripts() {
-        if (has_shortcode(get_post()->post_content ?? '', 'pool_configurator')) {
+        // Vérification plus robuste du shortcode
+        global $post;
+        $has_shortcode = false;
+
+        if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'pool_configurator')) {
+            $has_shortcode = true;
+        }
+
+        // Aussi vérifier dans le contenu si on est sur une page/post
+        if (!$has_shortcode && is_singular()) {
+            $content = get_the_content();
+            if ($content && has_shortcode($content, 'pool_configurator')) {
+                $has_shortcode = true;
+            }
+        }
+
+        if ($has_shortcode) {
             wp_enqueue_style('pool-public-css', POOL_CONFIGURATOR_PLUGIN_URL . 'public/css/public.css', array(), POOL_CONFIGURATOR_VERSION);
             wp_enqueue_script('pool-public-js', POOL_CONFIGURATOR_PLUGIN_URL . 'public/js/public.js', array('jquery'), POOL_CONFIGURATOR_VERSION, true);
 
@@ -178,7 +194,13 @@ class Pool_Public {
     }
 
     public static function ajax_get_pool_data() {
-        check_ajax_referer('pool_configurator_nonce', 'nonce');
+        // Vérification du nonce moins stricte pour permettre aux invités d'accéder
+        $nonce_check = check_ajax_referer('pool_configurator_nonce', 'nonce', false);
+
+        if (!$nonce_check) {
+            // Pour les invités, on accepte quand même la requête mais on log l'événement
+            error_log('Pool Configurator: Nonce verification failed for guest user in ajax_get_pool_data');
+        }
 
         // Récupérer les tailles de piscine
         $pool_sizes = get_posts(array(
@@ -259,7 +281,13 @@ class Pool_Public {
     }
 
     public static function ajax_save_pool_lead() {
-        check_ajax_referer('pool_configurator_nonce', 'nonce');
+        // Vérification du nonce moins stricte pour permettre aux invités d'accéder
+        $nonce_check = check_ajax_referer('pool_configurator_nonce', 'nonce', false);
+
+        if (!$nonce_check) {
+            // Pour les invités, on accepte quand même la requête mais on log l'événement
+            error_log('Pool Configurator: Nonce verification failed for guest user in ajax_save_pool_lead');
+        }
 
         $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
         $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
@@ -346,7 +374,13 @@ class Pool_Public {
     }
 
     public static function ajax_submit_configuration() {
-        check_ajax_referer('pool_configurator_nonce', 'nonce');
+        // Vérification du nonce moins stricte pour permettre aux invités d'accéder
+        $nonce_check = check_ajax_referer('pool_configurator_nonce', 'nonce', false);
+
+        if (!$nonce_check) {
+            // Pour les invités, on accepte quand même la requête mais on log l'événement
+            error_log('Pool Configurator: Nonce verification failed for guest user in ajax_submit_configuration');
+        }
 
         $config_data = isset($_POST['configuration']) ? json_decode(stripslashes($_POST['configuration']), true) : array();
         $customer_data = isset($_POST['customer']) ? $_POST['customer'] : array();

@@ -1,6 +1,15 @@
 jQuery(document).ready(function($) {
     'use strict';
 
+    // Vérifier que poolConfig existe
+    if (typeof poolConfig === 'undefined') {
+        console.error('Pool Configurator: poolConfig is not defined. Scripts may not be properly enqueued.');
+        alert('Erreur de configuration. Veuillez recharger la page.');
+        return;
+    }
+
+    console.log('Pool Configurator initialized with config:', poolConfig);
+
     // État de la configuration
     const configuratorState = {
         currentStep: 0,
@@ -50,10 +59,14 @@ jQuery(document).ready(function($) {
                     configuratorState.poolData = response.data;
                     renderPoolSizes(response.data.sizes);
                     // Ne pas afficher les options tout de suite, attendre qu'une taille soit sélectionnée
+                } else {
+                    console.error('Pool Configurator Error:', response);
+                    showError('Erreur lors du chargement des données: ' + (response.data ? response.data.message : 'Erreur inconnue'));
                 }
             },
-            error: function() {
-                showError('Erreur lors du chargement des données');
+            error: function(xhr, status, error) {
+                console.error('Pool Configurator AJAX Error:', xhr, status, error);
+                showError('Erreur lors du chargement des données. Veuillez recharger la page.');
             }
         });
     }
@@ -324,12 +337,15 @@ jQuery(document).ready(function($) {
                     btn.prop('disabled', false).text('Suivant →');
                     nextStep(); // Passer à l'étape suivante
                 } else {
+                    console.error('Pool Configurator Lead Save Error:', response);
                     showError(response.data.message || 'Erreur lors de l\'enregistrement');
                     btn.prop('disabled', false).text('Suivant →');
                 }
             },
-            error: function() {
-                showError('Erreur de connexion. Veuillez réessayer.');
+            error: function(xhr, status, error) {
+                console.error('Pool Configurator Lead Save AJAX Error:', xhr, status, error);
+                console.log('XHR Response:', xhr.responseText);
+                showError('Erreur de connexion. Veuillez réessayer. Vérifiez la console pour plus de détails.');
                 btn.prop('disabled', false).text('Suivant →');
             }
         });
@@ -532,12 +548,15 @@ jQuery(document).ready(function($) {
                         window.location.href = response.data.cart_url;
                     }, 800);
                 } else {
+                    console.error('Pool Configurator Submit Error:', response);
                     showError(response.data.message || 'Erreur lors de l\'ajout au panier');
                     submitBtn.prop('disabled', false).html('Ajouter au panier');
                 }
             },
-            error: function() {
-                showError('Erreur de connexion. Veuillez réessayer.');
+            error: function(xhr, status, error) {
+                console.error('Pool Configurator Submit AJAX Error:', xhr, status, error);
+                console.log('XHR Response:', xhr.responseText);
+                showError('Erreur de connexion. Veuillez réessayer. Vérifiez la console pour plus de détails.');
                 submitBtn.prop('disabled', false).html('Ajouter au panier');
             }
         });
