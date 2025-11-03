@@ -73,7 +73,7 @@
 .pool-fullscreen .pool-configurator-content {
     max-width: 900px;
     margin: 0 auto;
-    padding-bottom: 150px; /* Espace pour les boutons fixes */
+    padding-bottom: 90px; /* Espace pour les boutons fixes - réduit de moitié */
 }
 
 /* Barre de progression */
@@ -485,7 +485,7 @@
     box-shadow: 0 0 0 3px rgba(12, 169, 193, 0.1);
 }
 
-/* Footer avec navigation - FIXÉ EN BAS */
+/* Footer avec navigation - FIXÉ EN BAS - VERSION COMPACTE */
 .pool-configurator-footer {
     position: fixed;
     bottom: 0;
@@ -493,15 +493,15 @@
     right: 0;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
-    padding: 20px 30px;
+    padding: 12px 25px;
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 15px;
     z-index: 1000;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .pool-price-display {
@@ -513,45 +513,45 @@
 }
 
 .price-label {
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--text-light);
-    margin-bottom: 3px;
+    margin-bottom: 2px;
 }
 
 .price-amount {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 700;
     display: flex;
     align-items: baseline;
-    gap: 3px;
+    gap: 2px;
     color: var(--primary-color);
 }
 
 .currency {
-    font-size: 18px;
+    font-size: 14px;
 }
 
 .pool-navigation {
     display: flex;
-    gap: 12px;
+    gap: 10px;
 }
 
 /* Boutons - Plus petits et modernes */
 .pool-btn {
-    padding: 10px 24px;
-    font-size: 14px;
+    padding: 8px 20px;
+    font-size: 13px;
     font-weight: 600;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
     font-family: inherit;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     white-space: nowrap;
 }
 
@@ -678,7 +678,7 @@
     }
 
     .pool-fullscreen .pool-configurator-content {
-        padding-bottom: 180px; /* Plus d'espace pour le footer mobile */
+        padding-bottom: 100px; /* Espace pour le footer mobile */
     }
 
     .pool-logo img {
@@ -700,10 +700,10 @@
     }
 
     .pool-configurator-footer {
-        padding: 15px 20px;
+        padding: 10px 15px;
         flex-direction: row;
         justify-content: space-between;
-        gap: 15px;
+        gap: 12px;
     }
 
     .pool-price-display {
@@ -711,11 +711,15 @@
     }
 
     .price-amount {
-        font-size: 20px;
+        font-size: 16px;
     }
 
     .currency {
-        font-size: 16px;
+        font-size: 12px;
+    }
+
+    .price-label {
+        font-size: 9px;
     }
 
     .pool-navigation {
@@ -723,8 +727,8 @@
     }
 
     .pool-btn {
-        padding: 8px 16px;
-        font-size: 13px;
+        padding: 7px 14px;
+        font-size: 12px;
     }
 
     .pool-summary,
