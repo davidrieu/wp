@@ -273,11 +273,21 @@ class Pool_Public {
             wp_send_json_error(array('message' => 'Veuillez fournir un numéro de téléphone'));
         }
 
+        // Permettre temporairement aux utilisateurs non connectés de créer des posts
+        $current_user_id = get_current_user_id();
+        $is_guest = ($current_user_id === 0);
+
+        if ($is_guest) {
+            // Temporairement, donner les permissions nécessaires
+            add_filter('user_has_cap', array(__CLASS__, 'grant_guest_post_cap'), 10, 3);
+        }
+
         // Enregistrer le lead dans un Custom Post Type
         $lead_data = array(
             'post_title' => 'Lead - ' . $email,
             'post_type' => 'pool_lead',
             'post_status' => 'private',
+            'post_author' => $is_guest ? 1 : $current_user_id, // Utiliser l'admin (ID=1) pour les invités
             'meta_input' => array(
                 '_lead_email' => $email,
                 '_lead_phone' => $phone,
@@ -286,24 +296,25 @@ class Pool_Public {
             )
         );
 
-        // Enregistrer le CPT si ce n'est pas déjà fait
-        if (!post_type_exists('pool_lead')) {
-            register_post_type('pool_lead', array(
-                'labels' => array('name' => 'Leads'),
-                'public' => false,
-                'show_ui' => true,
-                'show_in_menu' => 'edit.php?post_type=pool_size',
-                'capability_type' => 'post'
-            ));
-        }
-
         $lead_id = wp_insert_post($lead_data);
 
-        if ($lead_id) {
-            // Stocker dans la session pour l'utiliser plus tard
-            WC()->session->set('pool_lead_id', $lead_id);
-            WC()->session->set('pool_lead_email', $email);
-            WC()->session->set('pool_lead_phone', $phone);
+        // Retirer le filtre
+        if ($is_guest) {
+            remove_filter('user_has_cap', array(__CLASS__, 'grant_guest_post_cap'), 10);
+        }
+
+        if ($lead_id && !is_wp_error($lead_id)) {
+            // S'assurer que WooCommerce est chargé et que la session est initialisée
+            if (class_exists('WooCommerce') && WC()->session) {
+                // Stocker dans la session WooCommerce pour l'utiliser plus tard
+                WC()->session->set('pool_lead_id', $lead_id);
+                WC()->session->set('pool_lead_email', $email);
+                WC()->session->set('pool_lead_phone', $phone);
+            }
+
+            // Stocker aussi dans un cookie comme fallback (expiration: 1 heure)
+            setcookie('pool_lead_email', $email, time() + 3600, '/');
+            setcookie('pool_lead_phone', $phone, time() + 3600, '/');
 
             wp_send_json_success(array(
                 'message' => 'Coordonnées enregistrées avec succès',
@@ -312,6 +323,26 @@ class Pool_Public {
         } else {
             wp_send_json_error(array('message' => 'Erreur lors de l\'enregistrement'));
         }
+    }
+
+    /**
+     * Accorde temporairement les permissions nécessaires aux invités pour créer des leads et des produits
+     */
+    public static function grant_guest_post_cap($allcaps, $caps, $args) {
+        // Permettre la création de posts, produits et termes de taxonomie
+        $allowed_caps = array('edit_posts', 'edit_products', 'publish_posts', 'publish_products', 'manage_product_terms', 'edit_product');
+
+        if (isset($args[0]) && in_array($args[0], $allowed_caps)) {
+            $allcaps[$args[0]] = true;
+        }
+
+        // Capacités générales pour la création de contenu
+        $allcaps['edit_posts'] = true;
+        $allcaps['edit_products'] = true;
+        $allcaps['publish_posts'] = true;
+        $allcaps['publish_products'] = true;
+
+        return $allcaps;
     }
 
     public static function ajax_submit_configuration() {
@@ -323,6 +354,24 @@ class Pool_Public {
         // Validation
         if (empty($config_data['size_id'])) {
             wp_send_json_error(array('message' => 'Veuillez sélectionner une taille de piscine'));
+        }
+
+        // Vérifier que WooCommerce est chargé
+        if (!class_exists('WooCommerce')) {
+            wp_send_json_error(array('message' => 'WooCommerce n\'est pas activé'));
+        }
+
+        // S'assurer que WooCommerce est complètement initialisé
+        if (is_null(WC()->cart) || is_null(WC()->session)) {
+            wp_send_json_error(array('message' => 'La session WooCommerce n\'est pas initialisée. Veuillez recharger la page.'));
+        }
+
+        // Permettre temporairement aux utilisateurs non connectés de créer des produits
+        $current_user_id = get_current_user_id();
+        $is_guest = ($current_user_id === 0);
+
+        if ($is_guest) {
+            add_filter('user_has_cap', array(__CLASS__, 'grant_guest_post_cap'), 10, 3);
         }
 
         // Vider le panier avant d'ajouter la nouvelle configuration
@@ -344,7 +393,8 @@ class Pool_Public {
         $pool_product_data = array(
             'post_title' => 'Configuration Piscine - ' . $size->post_title,
             'post_type' => 'product',
-            'post_status' => 'publish'
+            'post_status' => 'publish',
+            'post_author' => $is_guest ? 1 : $current_user_id
         );
 
         $pool_product_id = wp_insert_post($pool_product_data);
@@ -398,7 +448,8 @@ class Pool_Public {
                     $option_product_data = array(
                         'post_title' => 'Option - ' . $option->post_title,
                         'post_type' => 'product',
-                        'post_status' => 'publish'
+                        'post_status' => 'publish',
+                        'post_author' => $is_guest ? 1 : $current_user_id
                     );
 
                     $option_product_id = wp_insert_post($option_product_data);
@@ -424,17 +475,19 @@ class Pool_Public {
         }
 
         // Stocker les informations client dans la session
-        if (!empty($customer_data['name'])) {
-            WC()->session->set('pool_customer_name', sanitize_text_field($customer_data['name']));
-        }
-        if (!empty($customer_data['email'])) {
-            WC()->session->set('pool_customer_email', sanitize_email($customer_data['email']));
-        }
-        if (!empty($customer_data['phone'])) {
-            WC()->session->set('pool_customer_phone', sanitize_text_field($customer_data['phone']));
-        }
-        if (!empty($customer_data['message'])) {
-            WC()->session->set('pool_customer_message', sanitize_textarea_field($customer_data['message']));
+        if (WC()->session) {
+            if (!empty($customer_data['name'])) {
+                WC()->session->set('pool_customer_name', sanitize_text_field($customer_data['name']));
+            }
+            if (!empty($customer_data['email'])) {
+                WC()->session->set('pool_customer_email', sanitize_email($customer_data['email']));
+            }
+            if (!empty($customer_data['phone'])) {
+                WC()->session->set('pool_customer_phone', sanitize_text_field($customer_data['phone']));
+            }
+            if (!empty($customer_data['message'])) {
+                WC()->session->set('pool_customer_message', sanitize_textarea_field($customer_data['message']));
+            }
         }
 
         // Enregistrer aussi dans la configuration pour l'historique
@@ -442,6 +495,7 @@ class Pool_Public {
             'post_title' => 'Configuration - ' . (!empty($customer_data['name']) ? sanitize_text_field($customer_data['name']) : 'Client'),
             'post_type' => 'pool_configuration',
             'post_status' => 'private',
+            'post_author' => $is_guest ? 1 : $current_user_id,
             'meta_input' => array(
                 '_config_data' => $config_data,
                 '_customer_name' => sanitize_text_field($customer_data['name'] ?? ''),
@@ -453,6 +507,11 @@ class Pool_Public {
         );
 
         wp_insert_post($post_data);
+
+        // Retirer le filtre
+        if ($is_guest) {
+            remove_filter('user_has_cap', array(__CLASS__, 'grant_guest_post_cap'), 10);
+        }
 
         wp_send_json_success(array(
             'message' => 'Configuration ajoutée au panier avec succès',

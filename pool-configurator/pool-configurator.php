@@ -58,6 +58,23 @@ class Pool_Configurator {
 
         // Initialiser le frontend
         Pool_Public::init();
+
+        // Forcer l'initialisation de la session WooCommerce pour les invités
+        add_action('woocommerce_init', array($this, 'ensure_wc_session'));
+    }
+
+    /**
+     * S'assurer que WooCommerce initialise toujours une session, même pour les invités
+     */
+    public function ensure_wc_session() {
+        if (is_null(WC()->session)) {
+            return;
+        }
+
+        // Forcer l'initialisation de la session pour tous les utilisateurs
+        if (!WC()->session->has_session()) {
+            WC()->session->set_customer_session_cookie(true);
+        }
     }
 
     public function load_textdomain() {
