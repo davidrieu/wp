@@ -1,0 +1,57 @@
+/* Styles pour l'administration du configurateur de piscines */
+
+.pool-meta-fields p,
+.pool-option-fields p {
+    margin-bottom: 15px;
+}
+
+.pool-meta-fields label,
+.pool-option-fields label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.pool-products-wrapper {
+    margin-top: 10px;
+}
+
+.pool-product-item {
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.add-product-btn {
+    margin-top: 10px;
+    background: #00575d !important;
+    color: white !important;
+    border-color: #00575d !important;
+    text-shadow: none !important;
+}
+
+.add-product-btn:hover {
+    background: #0ca9c1 !important;
+    border-color: #0ca9c1 !important;
+}
+
+.remove-product-btn {
+    background: transparent;
+    border: none;
+    color: #a00;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.remove-product-btn:hover {
+    color: #dc3232;
+}

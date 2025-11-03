@@ -1,0 +1,690 @@
+/* Configurateur de Piscines - Style Typeform moderne */
+
+:root {
+    --primary-color: #00575d;
+    --secondary-color: #0ca9c1;
+    --text-dark: #2d3748;
+    --text-light: #718096;
+    --bg-light: #f7fafc;
+    --border-color: #e2e8f0;
+    --success-color: #48bb78;
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.pool-configurator {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+/* Barre de progression */
+.pool-configurator-progress {
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 100px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-light);
+    min-width: 50px;
+    text-align: right;
+}
+
+/* Contenu des étapes */
+.pool-configurator-content {
+    min-height: 500px;
+    position: relative;
+}
+
+.pool-step {
+    display: none;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pool-step.active {
+    display: block;
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.step-header {
+    text-align: center;
+    margin-bottom: 50px;
+    animation: fadeIn 0.8s ease-out 0.2s both;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.step-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0 15px;
+    letter-spacing: -0.5px;
+}
+
+.step-subtitle {
+    font-size: 18px;
+    color: var(--text-light);
+    margin: 0;
+}
+
+/* Grille des tailles de piscine */
+.pool-sizes-grid,
+.pool-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.pool-size-card,
+.pool-option-card {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 30px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.pool-size-card::before,
+.pool-option-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    transform: scaleX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pool-size-card:hover,
+.pool-option-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--secondary-color);
+}
+
+.pool-size-card:hover::before,
+.pool-option-card:hover::before {
+    transform: scaleX(1);
+}
+
+.pool-size-card.selected,
+.pool-option-card.selected {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(0, 87, 93, 0.05), rgba(12, 169, 193, 0.05));
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.pool-size-card.selected::before,
+.pool-option-card.selected::before {
+    transform: scaleX(1);
+}
+
+.pool-size-card.selected::after,
+.pool-option-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 32px;
+    height: 32px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    animation: checkmark 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes checkmark {
+    0% {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.card-thumbnail {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.card-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0 10px;
+}
+
+.card-dimensions {
+    font-size: 16px;
+    color: var(--text-light);
+    margin: 0 0 15px;
+    font-weight: 500;
+}
+
+.card-description {
+    font-size: 15px;
+    color: var(--text-dark);
+    margin: 0 0 20px;
+    line-height: 1.6;
+}
+
+.card-price {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin: 0;
+}
+
+.card-price-label {
+    font-size: 14px;
+    color: var(--text-light);
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.card-products-list {
+    margin: 20px 0;
+    padding: 15px;
+    background: var(--bg-light);
+    border-radius: 8px;
+}
+
+.card-products-list h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card-products-list ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.card-products-list li {
+    font-size: 14px;
+    color: var(--text-dark);
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-products-list li::before {
+    content: '•';
+    color: var(--secondary-color);
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* Options spécifiques */
+.pool-option-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.option-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.option-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.option-icon-small {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.option-info {
+    flex: 1;
+}
+
+/* Récapitulatif */
+.pool-summary {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 40px;
+}
+
+.summary-section {
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.summary-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.summary-section h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0 20px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-item-name {
+    font-size: 16px;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.summary-item-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 0 0;
+    margin-top: 20px;
+    border-top: 3px solid var(--primary-color);
+}
+
+.summary-total-label {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.summary-total-price {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+/* Formulaire de contact */
+.pool-contact-form {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: var(--shadow-md);
+}
+
+.pool-contact-form h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0 30px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(12, 169, 193, 0.1);
+}
+
+/* Footer avec navigation */
+.pool-configurator-footer {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.pool-price-display {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+}
+
+.price-label {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.price-amount {
+    font-size: 36px;
+    font-weight: 700;
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.currency {
+    font-size: 24px;
+}
+
+.pool-navigation {
+    display: flex;
+    gap: 15px;
+}
+
+/* Boutons */
+.pool-btn {
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pool-btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.pool-btn-primary:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.pool-btn-primary:disabled {
+    background: var(--text-light);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.pool-btn-secondary {
+    background: white;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.pool-btn-secondary:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Spinner de chargement */
+.loading-spinner {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--secondary-color);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Modal de succès */
+.pool-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.pool-modal-content {
+    background: white;
+    padding: 50px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 500px;
+    box-shadow: var(--shadow-xl);
+    animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    margin: 0 auto 25px;
+    animation: checkmark 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pool-modal-content h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0 15px;
+}
+
+.pool-modal-content p {
+    font-size: 18px;
+    color: var(--text-dark);
+    margin: 0 0 30px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pool-configurator {
+        padding: 15px;
+    }
+
+    .step-title {
+        font-size: 28px;
+    }
+
+    .step-subtitle {
+        font-size: 16px;
+    }
+
+    .pool-sizes-grid,
+    .pool-options-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .pool-configurator-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pool-price-display {
+        text-align: center;
+    }
+
+    .pool-navigation {
+        justify-content: center;
+    }
+
+    .pool-summary,
+    .pool-contact-form {
+        padding: 25px;
+    }
+
+    .price-amount {
+        justify-content: center;
+    }
+}
+
+/* Animation au survol des cartes */
+.pool-size-card,
+.pool-option-card {
+    animation: cardAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.pool-size-card:nth-child(1),
+.pool-option-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.pool-size-card:nth-child(2),
+.pool-option-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.pool-size-card:nth-child(3),
+.pool-option-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.pool-size-card:nth-child(4),
+.pool-option-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+@keyframes cardAppear {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
