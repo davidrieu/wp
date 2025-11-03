@@ -674,23 +674,32 @@
 /* Responsive */
 @media (max-width: 768px) {
     .pool-fullscreen {
-        padding: 15px 10px;
+        padding: 15px 15px;
     }
 
     .pool-fullscreen .pool-configurator-content {
         padding-bottom: 100px; /* Espace pour le footer mobile */
+        overflow-x: hidden; /* Empêcher le défilement horizontal */
     }
 
     .pool-logo img {
         height: 35px;
     }
 
+    .step-header {
+        overflow: hidden;
+        padding: 0 5px;
+        margin-bottom: 30px;
+    }
+
     .step-title {
         font-size: 24px;
+        line-height: 1.3;
     }
 
     .step-subtitle {
         font-size: 15px;
+        line-height: 1.5;
     }
 
     .pool-sizes-grid,
@@ -835,6 +844,7 @@
     white-space: nowrap;
     animation: blink-caret 0.75s step-end infinite;
     display: inline-block;
+    max-width: 100%;
 }
 
 /* Le sous-titre doit pouvoir passer à la ligne */
@@ -842,6 +852,22 @@
     display: block;
     white-space: normal;
     word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Sur mobile, permettre aux titres de passer à la ligne aussi */
+@media (max-width: 768px) {
+    .step-title.typewriter {
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        display: block;
+        width: 100%;
+    }
+
+    .step-subtitle.typewriter {
+        width: 100%;
+    }
 }
 
 .typewriter.typing-complete {
