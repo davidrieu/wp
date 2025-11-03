@@ -66,7 +66,18 @@ jQuery(document).ready(function($) {
             },
             error: function(xhr, status, error) {
                 console.error('Pool Configurator AJAX Error:', xhr, status, error);
-                showError('Erreur lors du chargement des données. Veuillez recharger la page.');
+                console.error('XHR Status:', xhr.status);
+                console.error('XHR Response Text:', xhr.responseText);
+
+                // Essayer d'afficher la réponse HTML dans un div temporaire pour analyse
+                if (xhr.responseText) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = xhr.responseText;
+                    const errorMsg = tempDiv.textContent || tempDiv.innerText || xhr.responseText;
+                    console.error('Error Message from Server:', errorMsg.substring(0, 500));
+                }
+
+                showError('Erreur 503: Le serveur n\'est pas disponible. Un plugin de sécurité ou un firewall pourrait bloquer les requêtes AJAX.');
             }
         });
     }

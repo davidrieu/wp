@@ -194,15 +194,19 @@ class Pool_Public {
     }
 
     public static function ajax_get_pool_data() {
-        // Vérification du nonce moins stricte pour permettre aux invités d'accéder
-        $nonce_check = check_ajax_referer('pool_configurator_nonce', 'nonce', false);
+        try {
+            // Vérification du nonce moins stricte pour permettre aux invités d'accéder
+            $nonce_check = check_ajax_referer('pool_configurator_nonce', 'nonce', false);
 
-        if (!$nonce_check) {
-            // Pour les invités, on accepte quand même la requête mais on log l'événement
-            error_log('Pool Configurator: Nonce verification failed for guest user in ajax_get_pool_data');
-        }
+            if (!$nonce_check) {
+                // Pour les invités, on accepte quand même la requête mais on log l'événement
+                error_log('Pool Configurator: Nonce verification failed for guest user in ajax_get_pool_data');
+            }
 
-        // Récupérer les tailles de piscine
+            // Log pour debugging
+            error_log('Pool Configurator: ajax_get_pool_data called');
+
+            // Récupérer les tailles de piscine
         $pool_sizes = get_posts(array(
             'post_type' => 'pool_size',
             'posts_per_page' => -1,
@@ -274,10 +278,16 @@ class Pool_Public {
             );
         }
 
-        wp_send_json_success(array(
-            'sizes' => $sizes_data,
-            'options' => $options_data
-        ));
+            wp_send_json_success(array(
+                'sizes' => $sizes_data,
+                'options' => $options_data
+            ));
+        } catch (Exception $e) {
+            error_log('Pool Configurator Error in ajax_get_pool_data: ' . $e->getMessage());
+            wp_send_json_error(array(
+                'message' => 'Erreur serveur: ' . $e->getMessage()
+            ));
+        }
     }
 
     public static function ajax_save_pool_lead() {
