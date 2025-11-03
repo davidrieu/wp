@@ -1,14 +1,15 @@
-# 🏊 Configurateur de Piscines
+# 🏊 Configurateur de Piscines WooCommerce
 
-Un plugin WordPress moderne et interactif pour créer un configurateur de piscines avec une interface style Typeform.
+Un plugin WordPress moderne et interactif pour créer un configurateur de piscines avec une interface style Typeform, intégré à WooCommerce.
 
 ## 📋 Fonctionnalités
 
 ### Backend (Administration)
 - ✅ Création de tailles de piscine personnalisées
-- ✅ Ajout de produits inclus avec prix pour chaque taille
+- ✅ **Sélection de produits WooCommerce** à inclure dans chaque taille
+- ✅ **Liaison des options compatibles** par taille de piscine
 - ✅ Création d'options supplémentaires (équipements, finitions, accessoires)
-- ✅ Gestion des prix individuels pour chaque élément
+- ✅ Gestion automatique des prix via WooCommerce
 - ✅ Visualisation des demandes clients avec toutes les informations
 
 ### Frontend (Interface Client)
@@ -16,9 +17,11 @@ Un plugin WordPress moderne et interactif pour créer un configurateur de piscin
 - ✅ Navigation fluide entre les étapes avec animations
 - ✅ Barre de progression animée
 - ✅ Calcul du prix en temps réel
+- ✅ **Affichage des options compatibles** selon la taille choisie
 - ✅ Système de sélection intuitif avec feedback visuel
 - ✅ Formulaire de contact intégré
-- ✅ Modal de confirmation avec animation
+- ✅ **Ajout automatique au panier WooCommerce**
+- ✅ **Redirection vers le panier** pour finaliser l'achat
 
 ## 🎨 Code Couleur
 
@@ -28,16 +31,29 @@ Le plugin utilise la palette de couleurs suivante :
 
 ## 📦 Installation
 
-1. Téléchargez le dossier `pool-configurator`
-2. Placez-le dans le répertoire `/wp-content/plugins/` de votre installation WordPress
-3. Activez le plugin depuis le menu "Extensions" de WordPress
-4. Un nouveau menu "Configurateur Piscines" apparaîtra dans votre administration
+### Prérequis
+- WordPress 5.0 ou supérieur
+- **WooCommerce 3.0 ou supérieur** (obligatoire)
+
+### Étapes d'installation
+1. Assurez-vous que WooCommerce est installé et activé
+2. Téléchargez le dossier `pool-configurator`
+3. Placez-le dans le répertoire `/wp-content/plugins/` de votre installation WordPress
+4. Activez le plugin depuis le menu "Extensions" de WordPress
+5. Un nouveau menu "Configurateur Piscines" apparaîtra dans votre administration
 
 ## 🚀 Utilisation
 
 ### Configuration en Backoffice
 
-#### 1. Créer des Tailles de Piscine
+#### 1. Créer des Produits WooCommerce (Prérequis)
+
+Avant de configurer les piscines, créez vos produits WooCommerce :
+- Allez dans **WooCommerce > Produits > Ajouter un produit**
+- Créez tous les produits que vous souhaitez inclure (liner, filtration, échelle, etc.)
+- Définissez le prix de chaque produit
+
+#### 2. Créer des Tailles de Piscine
 
 1. Allez dans **Configurateur Piscines > Ajouter une taille**
 2. Remplissez les informations :
@@ -47,14 +63,20 @@ Le plugin utilise la palette de couleurs suivante :
    - **Prix de base** : Le prix de départ en euros
    - **Description** : Texte descriptif pour le client
 
-3. Ajoutez les **Produits Inclus** :
-   - Cliquez sur "Ajouter un produit"
-   - Renseignez le nom, le prix et la description
+3. **Sélectionnez les Produits WooCommerce Inclus** :
+   - Cliquez sur "Ajouter un produit WooCommerce"
+   - Sélectionnez un produit dans la liste déroulante
+   - Le prix sera automatiquement récupéré depuis WooCommerce
    - Ajoutez autant de produits que nécessaire
 
-4. Publiez la taille
+4. **Liez les Options Compatibles** :
+   - Cochez les options qui seront disponibles pour cette taille
+   - Seules ces options seront affichées au client
+   - Cela permet d'avoir des options différentes selon les tailles
 
-#### 2. Créer des Options
+5. Publiez la taille
+
+#### 3. Créer des Options
 
 1. Allez dans **Configurateur Piscines > Options > Ajouter une option**
 2. Remplissez les informations :
@@ -99,6 +121,7 @@ Le configurateur guide les clients à travers 3 étapes :
 - Les produits inclus sont listés
 
 **Étape 2 : Choix des options**
+- **Seules les options compatibles** avec la taille choisie sont affichées
 - Le client peut sélectionner/désélectionner des options
 - Les options sont optionnelles
 - Le prix se met à jour en temps réel
@@ -106,7 +129,20 @@ Le configurateur guide les clients à travers 3 étapes :
 **Étape 3 : Récapitulatif et contact**
 - Affichage du récapitulatif complet
 - Formulaire de coordonnées (nom, email, téléphone, message)
-- Validation et envoi de la demande
+- **Ajout automatique au panier WooCommerce**
+- **Redirection vers le panier** pour finaliser la commande
+
+## 🛒 Processus d'Achat
+
+1. Le client configure sa piscine (taille + options)
+2. Il remplit ses coordonnées
+3. Clic sur "Ajouter au panier"
+4. La configuration est automatiquement ajoutée au panier WooCommerce :
+   - Un produit pour la configuration de base (taille + produits inclus)
+   - Les produits WooCommerce sélectionnés
+   - Un produit pour chaque option choisie
+5. Le client est redirigé vers le panier WooCommerce
+6. Il peut finaliser sa commande via le processus standard WooCommerce
 
 ## 🎭 Animations
 
@@ -119,12 +155,14 @@ Le plugin inclut de nombreuses animations pour une expérience utilisateur agré
 - 🎬 Transitions douces entre les étapes
 - 🎉 Modal de succès avec animation
 
-## 📧 Notifications
+## 📧 Notifications et Commandes
 
-Quand un client envoie une demande :
-1. La configuration est enregistrée dans WordPress
-2. Un email de notification est envoyé à l'administrateur du site
-3. Le client voit une confirmation avec un message de succès
+Quand un client valide sa configuration :
+1. La configuration est ajoutée au panier WooCommerce
+2. Une entrée est créée dans **Configurateur Piscines > Demandes** pour historique
+3. Les coordonnées du client sont stockées dans la session WooCommerce
+4. Le client est redirigé vers le panier pour finaliser sa commande
+5. Une fois la commande passée, vous recevrez la notification standard de WooCommerce
 
 ## 🔧 Personnalisation
 

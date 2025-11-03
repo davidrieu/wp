@@ -45,7 +45,7 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     configuratorState.poolData = response.data;
                     renderPoolSizes(response.data.sizes);
-                    renderPoolOptions(response.data.options);
+                    // Ne pas afficher les options tout de suite, attendre qu'une taille soit sélectionnée
                 }
             },
             error: function() {
@@ -150,6 +150,12 @@ jQuery(document).ready(function($) {
         $('.pool-size-card').removeClass('selected');
         $(`.pool-size-card[data-id="${sizeId}"]`).addClass('selected');
 
+        // Réinitialiser les options sélectionnées
+        configuratorState.selectedOptions = [];
+
+        // Afficher les options compatibles avec cette taille
+        renderCompatibleOptions(sizeId);
+
         updatePrice();
 
         // Animation du bouton suivant
@@ -157,6 +163,35 @@ jQuery(document).ready(function($) {
         setTimeout(function() {
             $('#next-step').removeClass('pulse');
         }, 600);
+    }
+
+    function renderCompatibleOptions(sizeId) {
+        const container = $('#pool-options-container');
+        container.empty();
+
+        // Trouver la taille sélectionnée
+        const selectedSize = configuratorState.poolData.sizes.find(s => s.id === sizeId);
+
+        if (!selectedSize || !selectedSize.compatible_options || selectedSize.compatible_options.length === 0) {
+            container.html('<p style="text-align: center; color: #718096; padding: 40px;">Aucune option disponible pour cette taille. Vous pouvez passer à l\'étape suivante.</p>');
+            return;
+        }
+
+        // Filtrer les options compatibles
+        const compatibleOptions = configuratorState.poolData.options.filter(option => {
+            return selectedSize.compatible_options.includes(option.id);
+        });
+
+        if (compatibleOptions.length === 0) {
+            container.html('<p style="text-align: center; color: #718096; padding: 40px;">Aucune option disponible pour cette taille. Vous pouvez passer à l\'étape suivante.</p>');
+            return;
+        }
+
+        // Afficher les options compatibles
+        compatibleOptions.forEach(function(option) {
+            const card = createOptionCard(option);
+            container.append(card);
+        });
     }
 
     function toggleOption(optionId) {
@@ -404,7 +439,7 @@ jQuery(document).ready(function($) {
 
         // Désactiver le bouton pendant l'envoi
         const submitBtn = $('#submit-configuration');
-        submitBtn.prop('disabled', true).text('Envoi en cours...');
+        submitBtn.prop('disabled', true).html('⏳ Ajout au panier...');
 
         // Envoyer la configuration
         $.ajax({
@@ -418,21 +453,23 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    showSuccessModal();
+                    // Afficher un message de succès temporaire
+                    submitBtn.html('✓ Succès ! Redirection...');
+
+                    // Rediriger vers le panier WooCommerce après un court délai
+                    setTimeout(function() {
+                        window.location.href = response.data.cart_url;
+                    }, 800);
                 } else {
-                    showError(response.data.message || 'Erreur lors de l\'envoi');
-                    submitBtn.prop('disabled', false).text('Envoyer ma demande');
+                    showError(response.data.message || 'Erreur lors de l\'ajout au panier');
+                    submitBtn.prop('disabled', false).html('Ajouter au panier');
                 }
             },
             error: function() {
                 showError('Erreur de connexion. Veuillez réessayer.');
-                submitBtn.prop('disabled', false).text('Envoyer ma demande');
+                submitBtn.prop('disabled', false).html('Ajouter au panier');
             }
         });
-    }
-
-    function showSuccessModal() {
-        $('#pool-success-modal').fadeIn(300);
     }
 
     function showError(message) {

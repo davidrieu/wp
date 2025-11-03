@@ -21,7 +21,15 @@ class Pool_Admin {
 
         if (in_array($post_type, array('pool_size', 'pool_option'))) {
             wp_enqueue_style('pool-admin-css', POOL_CONFIGURATOR_PLUGIN_URL . 'admin/css/admin.css', array(), POOL_CONFIGURATOR_VERSION);
-            wp_enqueue_script('pool-admin-js', POOL_CONFIGURATOR_PLUGIN_URL . 'admin/js/admin.js', array('jquery'), POOL_CONFIGURATOR_VERSION, true);
+            wp_enqueue_style('select2-css', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css');
+            wp_enqueue_script('select2-js', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array('jquery'), null, true);
+            wp_enqueue_script('pool-admin-js', POOL_CONFIGURATOR_PLUGIN_URL . 'admin/js/admin.js', array('jquery', 'select2-js'), POOL_CONFIGURATOR_VERSION, true);
+
+            // Passer les données AJAX
+            wp_localize_script('pool-admin-js', 'poolAdminConfig', array(
+                'ajaxurl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('pool_admin_nonce')
+            ));
         }
     }
 
@@ -38,8 +46,17 @@ class Pool_Admin {
 
         add_meta_box(
             'pool_size_products',
-            'Produits Inclus',
+            'Produits WooCommerce Inclus',
             array(__CLASS__, 'render_pool_products_metabox'),
+            'pool_size',
+            'normal',
+            'high'
+        );
+
+        add_meta_box(
+            'pool_size_options',
+            'Options Compatibles',
+            array(__CLASS__, 'render_pool_size_options_metabox'),
             'pool_size',
             'normal',
             'high'
@@ -93,55 +110,122 @@ class Pool_Admin {
     }
 
     public static function render_pool_products_metabox($post) {
-        $products = get_post_meta($post->ID, '_pool_products', true);
-        if (!is_array($products)) {
-            $products = array();
+        $selected_products = get_post_meta($post->ID, '_pool_wc_products', true);
+        if (!is_array($selected_products)) {
+            $selected_products = array();
         }
+
+        // Récupérer tous les produits WooCommerce
+        $wc_products = wc_get_products(array(
+            'status' => 'publish',
+            'limit' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC'
+        ));
         ?>
-        <div class="pool-products-wrapper">
-            <div id="pool-products-list">
+        <div class="pool-wc-products-wrapper">
+            <p class="description" style="margin-bottom: 15px;">
+                Sélectionnez les produits WooCommerce qui seront inclus dans cette taille de piscine. Le prix total sera calculé automatiquement.
+            </p>
+
+            <div id="pool-wc-products-list">
                 <?php
-                if (!empty($products)) {
-                    foreach ($products as $index => $product) {
-                        self::render_product_item($index, $product);
+                if (!empty($selected_products)) {
+                    foreach ($selected_products as $index => $product_id) {
+                        self::render_wc_product_item($index, $product_id, $wc_products);
                     }
                 }
                 ?>
             </div>
-            <button type="button" class="button add-product-btn">Ajouter un produit</button>
+            <button type="button" class="button add-wc-product-btn">Ajouter un produit WooCommerce</button>
         </div>
 
-        <script type="text/html" id="pool-product-template">
-            <?php self::render_product_item('__INDEX__', array()); ?>
+        <script type="text/html" id="pool-wc-product-template">
+            <?php self::render_wc_product_item('__INDEX__', '', $wc_products); ?>
         </script>
         <?php
     }
 
-    private static function render_product_item($index, $product = array()) {
-        $name = isset($product['name']) ? $product['name'] : '';
-        $price = isset($product['price']) ? $product['price'] : '';
-        $description = isset($product['description']) ? $product['description'] : '';
+    private static function render_wc_product_item($index, $product_id = '', $wc_products = array()) {
         ?>
-        <div class="pool-product-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; background: #f9f9f9;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <strong>Produit #<?php echo $index + 1; ?></strong>
-                <button type="button" class="button remove-product-btn" style="color: #a00;">Supprimer</button>
+        <div class="pool-wc-product-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; background: #f9f9f9; display: flex; gap: 15px; align-items: center;">
+            <div style="flex: 1;">
+                <label><strong>Produit WooCommerce</strong></label><br>
+                <select name="pool_wc_products[]" class="wc-product-select" style="width: 100%;">
+                    <option value="">-- Sélectionner un produit --</option>
+                    <?php foreach ($wc_products as $product): ?>
+                        <option value="<?php echo esc_attr($product->get_id()); ?>"
+                                <?php selected($product_id, $product->get_id()); ?>
+                                data-price="<?php echo esc_attr($product->get_price()); ?>">
+                            <?php echo esc_html($product->get_name()); ?>
+                            (<?php echo wc_price($product->get_price()); ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
+            <div>
+                <button type="button" class="button remove-wc-product-btn" style="color: #a00; margin-top: 22px;">
+                    Supprimer
+                </button>
+            </div>
+        </div>
+        <?php
+    }
 
-            <p>
-                <label><strong>Nom du produit</strong></label><br>
-                <input type="text" name="pool_products[<?php echo $index; ?>][name]" value="<?php echo esc_attr($name); ?>" style="width: 100%;" placeholder="Ex: Liner bleu">
+    public static function render_pool_size_options_metabox($post) {
+        $compatible_options = get_post_meta($post->ID, '_pool_compatible_options', true);
+        if (!is_array($compatible_options)) {
+            $compatible_options = array();
+        }
+
+        // Récupérer toutes les options disponibles
+        $all_options = get_posts(array(
+            'post_type' => 'pool_option',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC'
+        ));
+        ?>
+        <div class="pool-options-wrapper">
+            <p class="description" style="margin-bottom: 15px;">
+                Sélectionnez les options qui seront disponibles pour cette taille de piscine. Les clients ne pourront choisir que ces options.
             </p>
 
-            <p>
-                <label><strong>Prix (€)</strong></label><br>
-                <input type="number" name="pool_products[<?php echo $index; ?>][price]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 100%;" placeholder="0.00">
-            </p>
+            <?php if (empty($all_options)): ?>
+                <p style="padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
+                    ⚠️ Aucune option créée. <a href="<?php echo admin_url('post-new.php?post_type=pool_option'); ?>">Créez d'abord des options</a> avant de les lier à cette taille.
+                </p>
+            <?php else: ?>
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background: white;">
+                    <?php foreach ($all_options as $option):
+                        $option_price = get_post_meta($option->ID, '_pool_option_price', true);
+                        $option_icon = get_post_meta($option->ID, '_pool_option_icon', true);
+                        $is_checked = in_array($option->ID, $compatible_options);
+                    ?>
+                        <label style="display: block; padding: 10px; margin-bottom: 5px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;"
+                               onmouseover="this.style.background='#f9f9f9'"
+                               onmouseout="this.style.background='white'">
+                            <input type="checkbox"
+                                   name="pool_compatible_options[]"
+                                   value="<?php echo esc_attr($option->ID); ?>"
+                                   <?php checked($is_checked); ?>>
+                            <strong style="margin-left: 10px;">
+                                <?php if ($option_icon): ?>
+                                    <span style="margin-right: 5px;"><?php echo esc_html($option_icon); ?></span>
+                                <?php endif; ?>
+                                <?php echo esc_html($option->post_title); ?>
+                            </strong>
+                            <span style="color: #0ca9c1; margin-left: 10px;">
+                                (<?php echo wc_price($option_price); ?>)
+                            </span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
 
-            <p>
-                <label><strong>Description</strong></label><br>
-                <textarea name="pool_products[<?php echo $index; ?>][description]" rows="2" style="width: 100%;"><?php echo esc_textarea($description); ?></textarea>
-            </p>
+                <p style="margin-top: 10px; font-style: italic; color: #666;">
+                    <?php echo count($compatible_options); ?> option(s) sélectionnée(s)
+                </p>
+            <?php endif; ?>
         </div>
         <?php
     }
@@ -207,19 +291,25 @@ class Pool_Admin {
             update_post_meta($post_id, '_pool_description', sanitize_textarea_field($_POST['pool_description']));
         }
 
-        // Sauvegarder les produits
-        if (isset($_POST['pool_products']) && is_array($_POST['pool_products'])) {
-            $products = array();
-            foreach ($_POST['pool_products'] as $product) {
-                if (!empty($product['name'])) {
-                    $products[] = array(
-                        'name' => sanitize_text_field($product['name']),
-                        'price' => floatval($product['price']),
-                        'description' => sanitize_textarea_field($product['description'])
-                    );
+        // Sauvegarder les produits WooCommerce
+        if (isset($_POST['pool_wc_products']) && is_array($_POST['pool_wc_products'])) {
+            $wc_products = array();
+            foreach ($_POST['pool_wc_products'] as $product_id) {
+                if (!empty($product_id)) {
+                    $wc_products[] = intval($product_id);
                 }
             }
-            update_post_meta($post_id, '_pool_products', $products);
+            update_post_meta($post_id, '_pool_wc_products', $wc_products);
+        } else {
+            update_post_meta($post_id, '_pool_wc_products', array());
+        }
+
+        // Sauvegarder les options compatibles
+        if (isset($_POST['pool_compatible_options']) && is_array($_POST['pool_compatible_options'])) {
+            $compatible_options = array_map('intval', $_POST['pool_compatible_options']);
+            update_post_meta($post_id, '_pool_compatible_options', $compatible_options);
+        } else {
+            update_post_meta($post_id, '_pool_compatible_options', array());
         }
     }
 

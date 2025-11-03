@@ -76,7 +76,7 @@ class Pool_Public {
                 <div class="pool-step" data-step="3">
                     <div class="step-header">
                         <h2 class="step-title">Récapitulatif de votre configuration</h2>
-                        <p class="step-subtitle">Vérifiez votre sélection avant de continuer</p>
+                        <p class="step-subtitle">Vérifiez votre sélection avant d'ajouter au panier</p>
                     </div>
                     <div class="pool-summary" id="pool-summary-container">
                         <!-- Le récapitulatif sera inséré ici -->
@@ -123,7 +123,7 @@ class Pool_Public {
                         Suivant →
                     </button>
                     <button type="button" class="pool-btn pool-btn-primary" id="submit-configuration" style="display: none;">
-                        Envoyer ma demande
+                        🛒 Ajouter au panier
                     </button>
                 </div>
             </div>
@@ -156,14 +156,32 @@ class Pool_Public {
 
         $sizes_data = array();
         foreach ($pool_sizes as $size) {
-            $products = get_post_meta($size->ID, '_pool_products', true);
-            $total_price = floatval(get_post_meta($size->ID, '_pool_base_price', true));
+            $wc_product_ids = get_post_meta($size->ID, '_pool_wc_products', true);
+            $base_price = floatval(get_post_meta($size->ID, '_pool_base_price', true));
+            $total_price = $base_price;
+            $products = array();
 
-            // Calculer le prix total avec les produits
-            if (is_array($products)) {
-                foreach ($products as $product) {
-                    $total_price += floatval($product['price']);
+            // Récupérer les détails des produits WooCommerce
+            if (is_array($wc_product_ids) && !empty($wc_product_ids)) {
+                foreach ($wc_product_ids as $product_id) {
+                    $wc_product = wc_get_product($product_id);
+                    if ($wc_product) {
+                        $product_price = floatval($wc_product->get_price());
+                        $products[] = array(
+                            'id' => $product_id,
+                            'name' => $wc_product->get_name(),
+                            'price' => $product_price,
+                            'description' => $wc_product->get_short_description()
+                        );
+                        $total_price += $product_price;
+                    }
                 }
+            }
+
+            // Récupérer les options compatibles
+            $compatible_options = get_post_meta($size->ID, '_pool_compatible_options', true);
+            if (!is_array($compatible_options)) {
+                $compatible_options = array();
             }
 
             $sizes_data[] = array(
@@ -171,14 +189,15 @@ class Pool_Public {
                 'title' => $size->post_title,
                 'dimensions' => get_post_meta($size->ID, '_pool_dimensions', true),
                 'description' => get_post_meta($size->ID, '_pool_description', true),
-                'base_price' => floatval(get_post_meta($size->ID, '_pool_base_price', true)),
+                'base_price' => $base_price,
                 'total_price' => $total_price,
                 'products' => $products,
+                'compatible_options' => $compatible_options,
                 'thumbnail' => get_the_post_thumbnail_url($size->ID, 'medium')
             );
         }
 
-        // Récupérer les options
+        // Récupérer toutes les options
         $pool_options = get_posts(array(
             'post_type' => 'pool_option',
             'posts_per_page' => -1,
@@ -212,53 +231,142 @@ class Pool_Public {
         $customer_data = isset($_POST['customer']) ? $_POST['customer'] : array();
 
         // Validation
-        if (empty($config_data['size_id']) || empty($customer_data['name']) || empty($customer_data['email'])) {
-            wp_send_json_error(array('message' => 'Données incomplètes'));
+        if (empty($config_data['size_id'])) {
+            wp_send_json_error(array('message' => 'Veuillez sélectionner une taille de piscine'));
         }
 
-        // Créer un post pour stocker la configuration
+        // Vider le panier avant d'ajouter la nouvelle configuration
+        WC()->cart->empty_cart();
+
+        // Récupérer les informations de la taille sélectionnée
+        $size_id = intval($config_data['size_id']);
+        $size = get_post($size_id);
+
+        if (!$size) {
+            wp_send_json_error(array('message' => 'Taille de piscine introuvable'));
+        }
+
+        $base_price = floatval(get_post_meta($size_id, '_pool_base_price', true));
+        $wc_product_ids = get_post_meta($size_id, '_pool_wc_products', true);
+
+        // Ajouter le "produit" de base (la piscine) comme produit personnalisé
+        // Créer un produit WooCommerce personnalisé pour la configuration
+        $pool_product_data = array(
+            'post_title' => 'Configuration Piscine - ' . $size->post_title,
+            'post_type' => 'product',
+            'post_status' => 'publish'
+        );
+
+        $pool_product_id = wp_insert_post($pool_product_data);
+
+        if ($pool_product_id) {
+            // Définir le type et le prix du produit
+            wp_set_object_terms($pool_product_id, 'simple', 'product_type');
+            update_post_meta($pool_product_id, '_price', $base_price);
+            update_post_meta($pool_product_id, '_regular_price', $base_price);
+            update_post_meta($pool_product_id, '_virtual', 'yes');
+            update_post_meta($pool_product_id, '_sold_individually', 'yes');
+
+            // Stocker les informations de configuration
+            update_post_meta($pool_product_id, '_pool_configuration_data', $config_data);
+            update_post_meta($pool_product_id, '_is_pool_configuration', 'yes');
+
+            // Ajouter le produit de base au panier
+            $cart_item_data = array(
+                'pool_size_id' => $size_id,
+                'pool_size_title' => $size->post_title,
+                'pool_dimensions' => get_post_meta($size_id, '_pool_dimensions', true),
+                'configuration_id' => $pool_product_id
+            );
+
+            WC()->cart->add_to_cart($pool_product_id, 1, 0, array(), $cart_item_data);
+        }
+
+        // Ajouter les produits WooCommerce inclus
+        if (is_array($wc_product_ids) && !empty($wc_product_ids)) {
+            foreach ($wc_product_ids as $product_id) {
+                $product = wc_get_product($product_id);
+                if ($product) {
+                    $cart_item_data = array(
+                        'pool_configuration' => true,
+                        'pool_size_id' => $size_id,
+                        'included_in_pool' => true
+                    );
+                    WC()->cart->add_to_cart($product_id, 1, 0, array(), $cart_item_data);
+                }
+            }
+        }
+
+        // Ajouter les options sélectionnées
+        if (isset($config_data['options']) && is_array($config_data['options'])) {
+            foreach ($config_data['options'] as $option_id) {
+                $option = get_post($option_id);
+                if ($option) {
+                    $option_price = floatval(get_post_meta($option_id, '_pool_option_price', true));
+
+                    // Créer un produit pour l'option
+                    $option_product_data = array(
+                        'post_title' => 'Option - ' . $option->post_title,
+                        'post_type' => 'product',
+                        'post_status' => 'publish'
+                    );
+
+                    $option_product_id = wp_insert_post($option_product_data);
+
+                    if ($option_product_id) {
+                        wp_set_object_terms($option_product_id, 'simple', 'product_type');
+                        update_post_meta($option_product_id, '_price', $option_price);
+                        update_post_meta($option_product_id, '_regular_price', $option_price);
+                        update_post_meta($option_product_id, '_virtual', 'yes');
+                        update_post_meta($option_product_id, '_sold_individually', 'yes');
+                        update_post_meta($option_product_id, '_is_pool_option', 'yes');
+
+                        $cart_item_data = array(
+                            'pool_configuration' => true,
+                            'pool_size_id' => $size_id,
+                            'pool_option_id' => $option_id
+                        );
+
+                        WC()->cart->add_to_cart($option_product_id, 1, 0, array(), $cart_item_data);
+                    }
+                }
+            }
+        }
+
+        // Stocker les informations client dans la session
+        if (!empty($customer_data['name'])) {
+            WC()->session->set('pool_customer_name', sanitize_text_field($customer_data['name']));
+        }
+        if (!empty($customer_data['email'])) {
+            WC()->session->set('pool_customer_email', sanitize_email($customer_data['email']));
+        }
+        if (!empty($customer_data['phone'])) {
+            WC()->session->set('pool_customer_phone', sanitize_text_field($customer_data['phone']));
+        }
+        if (!empty($customer_data['message'])) {
+            WC()->session->set('pool_customer_message', sanitize_textarea_field($customer_data['message']));
+        }
+
+        // Enregistrer aussi dans la configuration pour l'historique
         $post_data = array(
-            'post_title' => 'Configuration - ' . sanitize_text_field($customer_data['name']),
+            'post_title' => 'Configuration - ' . (!empty($customer_data['name']) ? sanitize_text_field($customer_data['name']) : 'Client'),
             'post_type' => 'pool_configuration',
             'post_status' => 'private',
             'meta_input' => array(
                 '_config_data' => $config_data,
-                '_customer_name' => sanitize_text_field($customer_data['name']),
-                '_customer_email' => sanitize_email($customer_data['email']),
-                '_customer_phone' => sanitize_text_field($customer_data['phone']),
-                '_customer_message' => sanitize_textarea_field($customer_data['message']),
+                '_customer_name' => sanitize_text_field($customer_data['name'] ?? ''),
+                '_customer_email' => sanitize_email($customer_data['email'] ?? ''),
+                '_customer_phone' => sanitize_text_field($customer_data['phone'] ?? ''),
+                '_customer_message' => sanitize_textarea_field($customer_data['message'] ?? ''),
                 '_config_date' => current_time('mysql')
             )
         );
 
-        // Si le CPT pool_configuration n'existe pas encore, on le crée
-        if (!post_type_exists('pool_configuration')) {
-            register_post_type('pool_configuration', array(
-                'labels' => array('name' => 'Configurations'),
-                'public' => false,
-                'show_ui' => true,
-                'show_in_menu' => 'edit.php?post_type=pool_size',
-                'capability_type' => 'post'
-            ));
-        }
+        wp_insert_post($post_data);
 
-        $config_id = wp_insert_post($post_data);
-
-        if ($config_id) {
-            // Envoyer un email de notification (optionnel)
-            $admin_email = get_option('admin_email');
-            $subject = 'Nouvelle configuration de piscine';
-            $message = "Nouvelle demande de configuration de piscine.\n\n";
-            $message .= "Client: " . $customer_data['name'] . "\n";
-            $message .= "Email: " . $customer_data['email'] . "\n";
-            $message .= "Téléphone: " . $customer_data['phone'] . "\n";
-            $message .= "Prix total: " . $config_data['total_price'] . "€\n";
-
-            wp_mail($admin_email, $subject, $message);
-
-            wp_send_json_success(array('message' => 'Configuration enregistrée avec succès'));
-        } else {
-            wp_send_json_error(array('message' => 'Erreur lors de l\'enregistrement'));
-        }
+        wp_send_json_success(array(
+            'message' => 'Configuration ajoutée au panier avec succès',
+            'cart_url' => wc_get_cart_url()
+        ));
     }
 }
