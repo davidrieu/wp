@@ -49,8 +49,79 @@ class Pool_Public {
     }
 
     public static function render_configurator($atts) {
+        // Charger les données directement pour éviter l'AJAX initial (contournement Tiger Protect)
+        $pool_sizes = get_posts(array(
+            'post_type' => 'pool_size',
+            'posts_per_page' => -1,
+            'orderby' => 'menu_order',
+            'order' => 'ASC'
+        ));
+
+        $sizes_data = array();
+        foreach ($pool_sizes as $size) {
+            $wc_product_ids = get_post_meta($size->ID, '_pool_wc_products', true);
+            $base_price = floatval(get_post_meta($size->ID, '_pool_base_price', true));
+            $total_price = $base_price;
+            $products = array();
+
+            if (is_array($wc_product_ids) && !empty($wc_product_ids) && class_exists('WooCommerce')) {
+                foreach ($wc_product_ids as $product_id) {
+                    $wc_product = wc_get_product($product_id);
+                    if ($wc_product) {
+                        $product_price = floatval($wc_product->get_price());
+                        $products[] = array(
+                            'id' => $product_id,
+                            'name' => $wc_product->get_name(),
+                            'price' => $product_price,
+                        );
+                        $total_price += $product_price;
+                    }
+                }
+            }
+
+            $compatible_options = get_post_meta($size->ID, '_pool_compatible_options', true);
+            if (!is_array($compatible_options)) {
+                $compatible_options = array();
+            }
+
+            $sizes_data[] = array(
+                'id' => $size->ID,
+                'title' => $size->post_title,
+                'dimensions' => get_post_meta($size->ID, '_pool_dimensions', true),
+                'description' => get_post_meta($size->ID, '_pool_description', true),
+                'base_price' => $base_price,
+                'total_price' => $total_price,
+                'products' => $products,
+                'compatible_options' => $compatible_options,
+                'thumbnail' => get_the_post_thumbnail_url($size->ID, 'medium')
+            );
+        }
+
+        $pool_options = get_posts(array(
+            'post_type' => 'pool_option',
+            'posts_per_page' => -1,
+            'orderby' => 'menu_order',
+            'order' => 'ASC'
+        ));
+
+        $options_data = array();
+        foreach ($pool_options as $option) {
+            $options_data[] = array(
+                'id' => $option->ID,
+                'title' => $option->post_title,
+                'description' => get_post_meta($option->ID, '_pool_option_description', true),
+                'price' => floatval(get_post_meta($option->ID, '_pool_option_price', true)),
+                'icon' => get_post_meta($option->ID, '_pool_option_icon', true),
+                'thumbnail' => get_the_post_thumbnail_url($option->ID, 'medium'),
+            );
+        }
+
         ob_start();
         ?>
+        <script type="text/javascript">
+        // Données pré-chargées pour éviter l'AJAX initial (contournement Tiger Protect WAF)
+        window.poolDataPreloaded = <?php echo json_encode(array('sizes' => $sizes_data, 'options' => $options_data)); ?>;
+        </script>
         <div id="pool-configurator" class="pool-configurator pool-fullscreen">
             <!-- Logo Poolkit -->
             <div class="pool-logo">

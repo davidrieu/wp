@@ -47,6 +47,16 @@ jQuery(document).ready(function($) {
     }
 
     function loadPoolData() {
+        // Vérifier si les données sont pré-chargées (contournement Tiger Protect WAF)
+        if (typeof window.poolDataPreloaded !== 'undefined') {
+            console.log('Pool Configurator: Using preloaded data (Tiger Protect WAF bypass)');
+            configuratorState.poolData = window.poolDataPreloaded;
+            renderPoolSizes(window.poolDataPreloaded.sizes);
+            return;
+        }
+
+        // Sinon, charger via AJAX (mode normal)
+        console.log('Pool Configurator: Loading data via AJAX');
         $.ajax({
             url: poolConfig.ajaxurl,
             type: 'POST',
@@ -77,7 +87,7 @@ jQuery(document).ready(function($) {
                     console.error('Error Message from Server:', errorMsg.substring(0, 500));
                 }
 
-                showError('Erreur 503: Le serveur n\'est pas disponible. Un plugin de sécurité ou un firewall pourrait bloquer les requêtes AJAX.');
+                showError('Erreur 503: Le serveur n\'est pas disponible. Tiger Protect WAF bloque les requêtes AJAX. Voir SOLUTION-O2SWITCH.md');
             }
         });
     }
