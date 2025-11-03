@@ -18,11 +18,62 @@
     box-sizing: border-box;
 }
 
-.pool-configurator {
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 20px;
+/* Mode plein écran immersif */
+.pool-configurator.pool-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    margin: 0;
+    padding: 40px 20px 20px;
+    background: linear-gradient(135deg, #f7fafc 0%, #e2e8f0 100%);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    overflow-y: auto;
+    z-index: 99999;
+}
+
+/* Logo Poolkit */
+.pool-logo {
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    z-index: 100;
+}
+
+.pool-logo img {
+    height: 50px;
+    width: auto;
+}
+
+/* Avatar Poolkit (emoji) */
+.poolkit-avatar {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.avatar-emoji {
+    display: inline-block;
+    font-size: 60px;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Conteneur principal dans le mode fullscreen */
+.pool-fullscreen .pool-configurator-content {
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 /* Barre de progression */
@@ -687,4 +738,116 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ===== POOLKIT SPECIFIC STYLES ===== */
+
+/* Formulaire de lead (étape 0) */
+.pool-lead-form {
+    max-width: 500px;
+    margin: 50px auto 0;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    animation: fadeInUp 0.6s ease-out 2.5s both;
+}
+
+.pool-lead-form .form-group {
+    margin-bottom: 25px;
+}
+
+.pool-lead-form input {
+    width: 100%;
+    padding: 14px 18px;
+    font-size: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.pool-lead-form input:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 4px rgba(12, 169, 193, 0.1);
+}
+
+.privacy-note {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 20px;
+}
+
+/* Effet Typewriter */
+.typewriter {
+    overflow: hidden;
+    border-right: 2px solid var(--primary-color);
+    white-space: nowrap;
+    animation: typing 2s steps(40, end), blink-caret 0.75s step-end infinite;
+    display: inline-block;
+}
+
+.typewriter.typing-complete {
+    border-right: none;
+    animation: none;
+}
+
+@keyframes typing {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+@keyframes blink-caret {
+    from, to {
+        border-color: transparent;
+    }
+    50% {
+        border-color: var(--primary-color);
+    }
+}
+
+/* Adaptation responsive pour le plein écran */
+@media (max-width: 768px) {
+    .pool-fullscreen {
+        padding: 20px 15px;
+    }
+
+    .pool-logo {
+        left: 20px;
+        top: 15px;
+    }
+
+    .pool-logo img {
+        height: 35px;
+    }
+
+    .avatar-emoji {
+        font-size: 48px;
+    }
+
+    .pool-lead-form {
+        padding: 30px 20px;
+    }
+
+    .step-title {
+        font-size: 28px !important;
+    }
+
+    .step-subtitle {
+        font-size: 16px !important;
+    }
+}
+
+/* Formulaire final amélioré */
+.form-intro {
+    text-align: center;
+    font-size: 16px;
+    color: var(--text-dark);
+    margin-bottom: 25px;
 }

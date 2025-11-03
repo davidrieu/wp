@@ -14,6 +14,8 @@ class Pool_Public {
         add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_public_scripts'));
         add_action('wp_ajax_get_pool_data', array(__CLASS__, 'ajax_get_pool_data'));
         add_action('wp_ajax_nopriv_get_pool_data', array(__CLASS__, 'ajax_get_pool_data'));
+        add_action('wp_ajax_save_pool_lead', array(__CLASS__, 'ajax_save_pool_lead'));
+        add_action('wp_ajax_nopriv_save_pool_lead', array(__CLASS__, 'ajax_save_pool_lead'));
         add_action('wp_ajax_submit_pool_configuration', array(__CLASS__, 'ajax_submit_configuration'));
         add_action('wp_ajax_nopriv_submit_pool_configuration', array(__CLASS__, 'ajax_submit_configuration'));
     }
@@ -33,27 +35,60 @@ class Pool_Public {
     public static function render_configurator($atts) {
         ob_start();
         ?>
-        <div id="pool-configurator" class="pool-configurator">
+        <div id="pool-configurator" class="pool-configurator pool-fullscreen">
+            <!-- Logo Poolkit -->
+            <div class="pool-logo">
+                <img src="https://www.poolkit.clickdev.website/wp-content/uploads/2025/11/PK_WEB_Sans-Baseline.png" alt="Poolkit" />
+            </div>
+
             <div class="pool-configurator-progress">
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: 0%;"></div>
                 </div>
                 <div class="progress-text">
-                    <span class="current-step">1</span> / <span class="total-steps">3</span>
+                    <span class="current-step">1</span> / <span class="total-steps">4</span>
                 </div>
             </div>
 
             <div class="pool-configurator-content">
-                <!-- Étape 1: Choix de la taille -->
-                <div class="pool-step active" data-step="1">
+                <!-- Étape 0: Collecte des coordonnées -->
+                <div class="pool-step active" data-step="0">
                     <div class="step-header">
-                        <h2 class="step-title">Choisissez la taille de votre piscine</h2>
-                        <p class="step-subtitle">Sélectionnez les dimensions idéales pour votre jardin</p>
+                        <div class="poolkit-avatar">
+                            <span class="avatar-emoji">👋</span>
+                        </div>
+                        <h2 class="step-title typewriter" data-text="Bonjour ! Je suis Poolkit"></h2>
+                        <p class="step-subtitle typewriter" data-text="Je vais vous accompagner pour créer la piscine de vos rêves. Avant de commencer, laissez-moi vos coordonnées pour personnaliser votre expérience." data-delay="2000"></p>
+                    </div>
+
+                    <div class="pool-lead-form">
+                        <div class="form-group">
+                            <label for="lead-email">Votre email *</label>
+                            <input type="email" id="lead-email" name="lead-email" required placeholder="exemple@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="lead-phone">Votre téléphone *</label>
+                            <input type="tel" id="lead-phone" name="lead-phone" required placeholder="06 12 34 56 78">
+                        </div>
+                        <p class="privacy-note">
+                            🔒 Vos données sont sécurisées et ne seront jamais partagées.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Étape 1: Choix de la taille -->
+                <div class="pool-step" data-step="1">
+                    <div class="step-header">
+                        <div class="poolkit-avatar">
+                            <span class="avatar-emoji">📏</span>
+                        </div>
+                        <h2 class="step-title typewriter" data-text="Parfait ! Quelle taille de piscine vous ferait plaisir ?"></h2>
+                        <p class="step-subtitle typewriter" data-text="Choisissez les dimensions qui correspondent à votre jardin. Tous nos kits sont 100% personnalisables et livrés en 3-10 jours." data-delay="2000"></p>
                     </div>
                     <div class="pool-sizes-grid" id="pool-sizes-container">
                         <div class="loading-spinner">
                             <div class="spinner"></div>
-                            <p>Chargement des tailles disponibles...</p>
+                            <p>Je prépare vos options...</p>
                         </div>
                     </div>
                 </div>
@@ -61,13 +96,16 @@ class Pool_Public {
                 <!-- Étape 2: Choix des options -->
                 <div class="pool-step" data-step="2">
                     <div class="step-header">
-                        <h2 class="step-title">Personnalisez votre piscine</h2>
-                        <p class="step-subtitle">Ajoutez des options pour rendre votre piscine unique</p>
+                        <div class="poolkit-avatar">
+                            <span class="avatar-emoji">✨</span>
+                        </div>
+                        <h2 class="step-title typewriter" data-text="Super choix ! Envie d'ajouter des options ?"></h2>
+                        <p class="step-subtitle typewriter" data-text="Nos options vous permettent de personnaliser votre piscine selon vos envies. C'est facultatif, mais ça peut faire toute la différence !" data-delay="2000"></p>
                     </div>
                     <div class="pool-options-grid" id="pool-options-container">
                         <div class="loading-spinner">
                             <div class="spinner"></div>
-                            <p>Chargement des options...</p>
+                            <p>Je charge les options disponibles...</p>
                         </div>
                     </div>
                 </div>
@@ -75,31 +113,27 @@ class Pool_Public {
                 <!-- Étape 3: Récapitulatif -->
                 <div class="pool-step" data-step="3">
                     <div class="step-header">
-                        <h2 class="step-title">Récapitulatif de votre configuration</h2>
-                        <p class="step-subtitle">Vérifiez votre sélection avant d'ajouter au panier</p>
+                        <div class="poolkit-avatar">
+                            <span class="avatar-emoji">🎉</span>
+                        </div>
+                        <h2 class="step-title typewriter" data-text="Génial ! Voici votre piscine personnalisée"></h2>
+                        <p class="step-subtitle typewriter" data-text="J'ai préparé un récapitulatif de votre configuration. Vous économisez 60% par rapport aux solutions traditionnelles !" data-delay="2000"></p>
                     </div>
                     <div class="pool-summary" id="pool-summary-container">
                         <!-- Le récapitulatif sera inséré ici -->
                     </div>
 
                     <div class="pool-contact-form">
-                        <h3>Vos coordonnées</h3>
+                        <h3>Un dernier détail...</h3>
+                        <p class="form-intro">Pour finaliser votre commande, j'ai besoin de votre nom et d'un message éventuel :</p>
                         <form id="pool-contact-form">
                             <div class="form-group">
-                                <label for="customer-name">Nom complet *</label>
-                                <input type="text" id="customer-name" name="name" required>
+                                <label for="customer-name">Votre nom complet *</label>
+                                <input type="text" id="customer-name" name="name" required placeholder="Jean Dupont">
                             </div>
                             <div class="form-group">
-                                <label for="customer-email">Email *</label>
-                                <input type="email" id="customer-email" name="email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="customer-phone">Téléphone *</label>
-                                <input type="tel" id="customer-phone" name="phone" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="customer-message">Message (optionnel)</label>
-                                <textarea id="customer-message" name="message" rows="4"></textarea>
+                                <label for="customer-message">Une question ou un message ? (optionnel)</label>
+                                <textarea id="customer-message" name="message" rows="3" placeholder="Besoin d'un conseil pour l'installation ? Posez votre question ici !"></textarea>
                             </div>
                         </form>
                     </div>
@@ -222,6 +256,62 @@ class Pool_Public {
             'sizes' => $sizes_data,
             'options' => $options_data
         ));
+    }
+
+    public static function ajax_save_pool_lead() {
+        check_ajax_referer('pool_configurator_nonce', 'nonce');
+
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
+
+        // Validation
+        if (empty($email) || !is_email($email)) {
+            wp_send_json_error(array('message' => 'Veuillez fournir une adresse email valide'));
+        }
+
+        if (empty($phone)) {
+            wp_send_json_error(array('message' => 'Veuillez fournir un numéro de téléphone'));
+        }
+
+        // Enregistrer le lead dans un Custom Post Type
+        $lead_data = array(
+            'post_title' => 'Lead - ' . $email,
+            'post_type' => 'pool_lead',
+            'post_status' => 'private',
+            'meta_input' => array(
+                '_lead_email' => $email,
+                '_lead_phone' => $phone,
+                '_lead_date' => current_time('mysql'),
+                '_lead_converted' => 'no'
+            )
+        );
+
+        // Enregistrer le CPT si ce n'est pas déjà fait
+        if (!post_type_exists('pool_lead')) {
+            register_post_type('pool_lead', array(
+                'labels' => array('name' => 'Leads'),
+                'public' => false,
+                'show_ui' => true,
+                'show_in_menu' => 'edit.php?post_type=pool_size',
+                'capability_type' => 'post'
+            ));
+        }
+
+        $lead_id = wp_insert_post($lead_data);
+
+        if ($lead_id) {
+            // Stocker dans la session pour l'utiliser plus tard
+            WC()->session->set('pool_lead_id', $lead_id);
+            WC()->session->set('pool_lead_email', $email);
+            WC()->session->set('pool_lead_phone', $phone);
+
+            wp_send_json_success(array(
+                'message' => 'Coordonnées enregistrées avec succès',
+                'lead_id' => $lead_id
+            ));
+        } else {
+            wp_send_json_error(array('message' => 'Erreur lors de l\'enregistrement'));
+        }
     }
 
     public static function ajax_submit_configuration() {

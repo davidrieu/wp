@@ -3,11 +3,14 @@ jQuery(document).ready(function($) {
 
     // État de la configuration
     const configuratorState = {
-        currentStep: 1,
-        totalSteps: 3,
+        currentStep: 0,
+        totalSteps: 4,
         selectedSize: null,
         selectedOptions: [],
-        poolData: null
+        poolData: null,
+        leadEmail: '',
+        leadPhone: '',
+        leadSaved: false
     };
 
     // Initialisation
@@ -16,6 +19,7 @@ jQuery(document).ready(function($) {
     function init() {
         loadPoolData();
         bindEvents();
+        initTypewriter();
     }
 
     function bindEvents() {
@@ -251,13 +255,35 @@ jQuery(document).ready(function($) {
     }
 
     function nextStep() {
-        // Validation
+        // Validation étape 0: Email et téléphone
+        if (configuratorState.currentStep === 0) {
+            const email = $('#lead-email').val();
+            const phone = $('#lead-phone').val();
+
+            if (!email || !isValidEmail(email)) {
+                showError('Veuillez fournir une adresse email valide');
+                return;
+            }
+
+            if (!phone || phone.length < 10) {
+                showError('Veuillez fournir un numéro de téléphone valide');
+                return;
+            }
+
+            // Sauvegarder le lead
+            if (!configuratorState.leadSaved) {
+                saveLead(email, phone);
+                return; // La fonction saveLead appellera nextStep() après succès
+            }
+        }
+
+        // Validation étape 1: Taille de piscine
         if (configuratorState.currentStep === 1 && !configuratorState.selectedSize) {
             showError('Veuillez sélectionner une taille de piscine');
             return;
         }
 
-        if (configuratorState.currentStep < configuratorState.totalSteps) {
+        if (configuratorState.currentStep < configuratorState.totalSteps - 1) {
             configuratorState.currentStep++;
             updateStepDisplay();
 
@@ -265,13 +291,58 @@ jQuery(document).ready(function($) {
             if (configuratorState.currentStep === 3) {
                 renderSummary();
             }
+
+            // Activer l'effet typewriter pour la nouvelle étape
+            setTimeout(function() {
+                initTypewriter();
+            }, 300);
         }
     }
 
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function saveLead(email, phone) {
+        const btn = $('#next-step');
+        btn.prop('disabled', true).text('⏳ Enregistrement...');
+
+        $.ajax({
+            url: poolConfig.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'save_pool_lead',
+                nonce: poolConfig.nonce,
+                email: email,
+                phone: phone
+            },
+            success: function(response) {
+                if (response.success) {
+                    configuratorState.leadSaved = true;
+                    configuratorState.leadEmail = email;
+                    configuratorState.leadPhone = phone;
+                    btn.prop('disabled', false).text('Suivant →');
+                    nextStep(); // Passer à l'étape suivante
+                } else {
+                    showError(response.data.message || 'Erreur lors de l\'enregistrement');
+                    btn.prop('disabled', false).text('Suivant →');
+                }
+            },
+            error: function() {
+                showError('Erreur de connexion. Veuillez réessayer.');
+                btn.prop('disabled', false).text('Suivant →');
+            }
+        });
+    }
+
     function prevStep() {
-        if (configuratorState.currentStep > 1) {
+        if (configuratorState.currentStep > 0) {
             configuratorState.currentStep--;
             updateStepDisplay();
+            // Réactiver l'effet typewriter
+            setTimeout(function() {
+                initTypewriter();
+            }, 300);
         }
     }
 
@@ -285,16 +356,16 @@ jQuery(document).ready(function($) {
         }, 100);
 
         // Mettre à jour la barre de progression
-        const progressPercent = (configuratorState.currentStep / configuratorState.totalSteps) * 100;
+        const progressPercent = ((configuratorState.currentStep + 1) / configuratorState.totalSteps) * 100;
         $('.progress-fill').css('width', progressPercent + '%');
-        $('.current-step').text(configuratorState.currentStep);
+        $('.current-step').text(configuratorState.currentStep + 1); // Afficher 1-4 au lieu de 0-3
 
         // Gérer les boutons de navigation
-        if (configuratorState.currentStep === 1) {
+        if (configuratorState.currentStep === 0) {
             $('#prev-step').hide();
             $('#next-step').show();
             $('#submit-configuration').hide();
-        } else if (configuratorState.currentStep === configuratorState.totalSteps) {
+        } else if (configuratorState.currentStep === configuratorState.totalSteps - 1) {
             $('#prev-step').show();
             $('#next-step').hide();
             $('#submit-configuration').show();
@@ -407,12 +478,12 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        // Récupérer les données du formulaire
+        // Récupérer les données du formulaire + lead sauvegardé
         const customerData = {
             name: $('#customer-name').val(),
-            email: $('#customer-email').val(),
-            phone: $('#customer-phone').val(),
-            message: $('#customer-message').val()
+            email: configuratorState.leadEmail, // Utiliser l'email du lead
+            phone: configuratorState.leadPhone, // Utiliser le téléphone du lead
+            message: $('#customer-message').val() || ''
         };
 
         // Calculer le prix total
@@ -482,6 +553,37 @@ jQuery(document).ready(function($) {
 
     function formatPriceNumber(price) {
         return Math.round(price).toLocaleString('fr-FR').replace(/\s/g, ' ');
+    }
+
+    // Effet Machine à écrire (Typewriter)
+    function initTypewriter() {
+        $('.pool-step.active .typewriter').each(function() {
+            const element = $(this);
+            const text = element.data('text');
+            const delay = element.data('delay') || 0;
+
+            // Réinitialiser
+            element.text('');
+            element.removeClass('typing-complete');
+
+            setTimeout(function() {
+                let i = 0;
+                const speed = 50; // Vitesse de frappe (ms par caractère)
+
+                function type() {
+                    if (i < text.length) {
+                        element.text(text.substring(0, i + 1));
+                        i++;
+                        setTimeout(type, speed);
+                    } else {
+                        // Animation terminée
+                        element.addClass('typing-complete');
+                    }
+                }
+
+                type();
+            }, delay);
+        });
     }
 
     // Animation de pulsation pour les prix

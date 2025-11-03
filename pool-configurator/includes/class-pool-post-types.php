@@ -65,6 +65,29 @@ class Pool_Post_Types {
             'capability_type' => 'post',
         ));
 
+        // Custom Post Type: Leads (coordonnées collectées)
+        register_post_type('pool_lead', array(
+            'labels' => array(
+                'name' => 'Leads',
+                'singular_name' => 'Lead',
+                'view_item' => 'Voir le lead',
+                'search_items' => 'Rechercher des leads',
+                'not_found' => 'Aucun lead trouvé',
+                'not_found_in_trash' => 'Aucun lead dans la corbeille',
+                'menu_name' => 'Leads'
+            ),
+            'public' => false,
+            'show_ui' => true,
+            'show_in_menu' => 'edit.php?post_type=pool_size',
+            'supports' => array('title'),
+            'has_archive' => false,
+            'capability_type' => 'post',
+            'capabilities' => array(
+                'create_posts' => false, // Empêche la création manuelle
+            ),
+            'map_meta_cap' => true,
+        ));
+
         // Custom Post Type: Configurations (demandes clients)
         register_post_type('pool_configuration', array(
             'labels' => array(
