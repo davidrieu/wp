@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build files
+public/js/app.bundle.js
+public/js/app.bundle.js.map
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Storage (ne pas commiter les fichiers uploadés)
+storage/
+
+# Environment
+.env
+.env.local
