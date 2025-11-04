@@ -97,6 +97,59 @@ if (isset($_POST['teknup_save_settings']) && check_admin_referer('teknup_setting
             <input type="submit" name="teknup_save_settings" class="button button-primary" value="<?php echo esc_attr__('Enregistrer les modifications', 'teknup-ai-mastering'); ?>">
         </p>
     </form>
+
+    <hr style="margin: 40px 0;">
+
+    <h2><?php echo esc_html__('Produits WooCommerce', 'teknup-ai-mastering'); ?></h2>
+
+    <?php
+    $product_ids = get_option('teknup_product_ids', array());
+    $products_created = get_option('teknup_products_created', false);
+    ?>
+
+    <?php if ($products_created && !empty($product_ids)) : ?>
+        <div class="notice notice-success inline">
+            <p>
+                <strong>✓ Produits créés :</strong>
+                <?php echo count($product_ids); ?> produits d'abonnement Teknup sont actifs.
+                <a href="<?php echo admin_url('edit.php?post_type=product&product_cat=teknup-subscriptions'); ?>">Voir les produits</a>
+            </p>
+        </div>
+    <?php else : ?>
+        <div class="notice notice-warning inline">
+            <p>
+                <strong>⚠ Aucun produit détecté.</strong>
+                Les produits d'abonnement n'ont pas été créés automatiquement lors de l'activation.
+            </p>
+        </div>
+    <?php endif; ?>
+
+    <p>
+        <button type="button" id="teknup-create-products" class="button button-secondary">
+            <?php echo $products_created ? '🔄 Recréer les produits' : '✨ Créer les 4 produits d\'abonnement'; ?>
+        </button>
+        <span id="teknup-products-result" style="margin-left: 15px;"></span>
+    </p>
+
+    <p class="description">
+        <?php echo esc_html__('Crée automatiquement les 4 produits d\'abonnement Teknup : Free Trial (0€), Starter (19€/mois), Pro (39€/mois), et Label (99€/mois).', 'teknup-ai-mastering'); ?>
+    </p>
+
+    <?php if (class_exists('WooCommerce')) : ?>
+        <p class="description" style="color: green;">
+            ✓ WooCommerce est activé
+            <?php if (class_exists('WC_Subscriptions')) : ?>
+                | ✓ WooCommerce Subscriptions est activé (produits de type subscription)
+            <?php else : ?>
+                | ⚠ WooCommerce Subscriptions non détecté (produits simples seront créés)
+            <?php endif; ?>
+        </p>
+    <?php else : ?>
+        <p class="description" style="color: red;">
+            ✗ WooCommerce doit être activé pour créer les produits
+        </p>
+    <?php endif; ?>
+
 </div>
 
 <script>
@@ -127,6 +180,43 @@ jQuery(document).ready(function($) {
             },
             complete: function() {
                 button.prop('disabled', false).text('Tester la connexion');
+            }
+        });
+    });
+
+    $('#teknup-create-products').on('click', function() {
+        const button = $(this);
+        const result = $('#teknup-products-result');
+
+        if (!confirm('Voulez-vous créer les 4 produits d\'abonnement Teknup ?\n\n- Teknup Free Trial (0€)\n- Teknup Starter (19€/mois)\n- Teknup Pro (39€/mois)\n- Teknup Label (99€/mois)')) {
+            return;
+        }
+
+        button.prop('disabled', true).text('Création en cours...');
+        result.html('<span style="color: #666;">Veuillez patienter...</span>');
+
+        $.ajax({
+            url: teknupAdmin.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'teknup_create_products',
+                nonce: teknupAdmin.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    result.html('<span style="color: green; font-weight: bold;">' + response.data.message + '</span>');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    result.html('<span style="color: red;">✗ ' + response.data.message + '</span>');
+                }
+            },
+            error: function() {
+                result.html('<span style="color: red;">✗ Erreur de connexion</span>');
+            },
+            complete: function() {
+                button.prop('disabled', false).text('✨ Créer les 4 produits d\'abonnement');
             }
         });
     });

@@ -64,6 +64,15 @@ Les produits sont créés dans la catégorie **"Abonnements Teknup"** et sont pr
 
 > **Note** : Si WooCommerce Subscriptions est installé, les produits seront de type "Abonnement". Sinon, ils seront créés comme produits simples (vous pourrez les convertir plus tard).
 
+#### Si les produits ne sont pas créés automatiquement
+
+Si les produits n'ont pas été créés lors de l'activation, vous pouvez les créer manuellement :
+
+1. Allez dans **Teknup > Réglages**
+2. Descendez jusqu'à la section **"Produits WooCommerce"**
+3. Cliquez sur le bouton **"✨ Créer les 4 produits d'abonnement"**
+4. Les produits sont créés instantanément !
+
 #### Personnalisation des produits (Optionnel)
 
 Vous pouvez modifier les produits créés dans **Produits > Tous les produits** :
