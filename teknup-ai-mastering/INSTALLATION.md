@@ -51,30 +51,28 @@ npm run build
 5. Entrez votre clé API
 6. Cliquez sur **"Tester la connexion"** ✓
 
-### 2. Configuration WooCommerce
+### 2. Produits WooCommerce (Automatique ! ✨)
 
-#### Créer les produits d'abonnement
+**Bonne nouvelle !** Les produits d'abonnement sont créés **automatiquement** lors de l'activation du plugin :
 
-Pour chaque plan, créez un produit WooCommerce de type **"Abonnement"** :
+✅ **Teknup Free Trial** (0€) - 3 masters gratuits
+✅ **Teknup Starter** (19€/mois) - 20 masters mensuels
+✅ **Teknup Pro** (39€/mois) - Mastering illimité
+✅ **Teknup Label** (99€/mois) - Solution label complète
 
-**Plan Free Trial**
-- Prix : 0€
-- Durée : 1 mois
-- Champ personnalisé : `_teknup_plan_slug` = `free_trial`
+Les produits sont créés dans la catégorie **"Abonnements Teknup"** et sont prêts à être utilisés immédiatement.
 
-**Plan Starter**
-- Prix : 19€/mois
-- Champ personnalisé : `_teknup_plan_slug` = `starter`
+> **Note** : Si WooCommerce Subscriptions est installé, les produits seront de type "Abonnement". Sinon, ils seront créés comme produits simples (vous pourrez les convertir plus tard).
 
-**Plan Pro**
-- Prix : 39€/mois
-- Champ personnalisé : `_teknup_plan_slug` = `pro`
+#### Personnalisation des produits (Optionnel)
 
-**Plan Label**
-- Prix : Sur mesure
-- Champ personnalisé : `_teknup_plan_slug` = `label`
+Vous pouvez modifier les produits créés dans **Produits > Tous les produits** :
+- Changer les prix
+- Modifier les descriptions
+- Ajouter des images
+- Personnaliser les durées d'abonnement
 
-> **Important** : Le champ `_teknup_plan_slug` doit être ajouté dans l'onglet "Données personnalisées" de chaque produit.
+⚠️ **Ne supprimez pas** le champ personnalisé `_teknup_plan_slug` - il est essentiel pour le fonctionnement du plugin.
 
 ## 🎨 Ajouter l'application sur votre site
 
@@ -127,8 +125,8 @@ L'intégration est automatique - 3 nouveaux onglets sont ajoutés :
 - [ ] Table `wp_teknup_mastering_jobs` créée
 - [ ] Dossier `/wp-content/teknup-storage/` créé
 - [ ] Fichiers de protection `.htaccess` présents
+- [ ] **4 produits WooCommerce créés automatiquement** ✨
 - [ ] Clé API Dolby.io configurée et testée ✓
-- [ ] Produits WooCommerce créés avec les bons slugs
 - [ ] Page avec `[teknup_app]` créée
 - [ ] Tâches cron WordPress actives
 

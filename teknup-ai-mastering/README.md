@@ -9,9 +9,10 @@ Teknup AI Mastering permet aux utilisateurs d'uploader leurs morceaux et de rece
 ## ⚡ Installation rapide
 
 1. **Installer le plugin** via Extensions > Ajouter dans WordPress
-2. **Configurer la clé API** Dolby.io dans Teknup > Réglages
-3. **Créer une page** et ajouter le shortcode `[teknup_app]`
-4. **C'est prêt !** Vos utilisateurs peuvent masteriser leurs tracks
+2. Les **4 produits d'abonnement sont créés automatiquement** ✨
+3. **Configurer la clé API** Dolby.io dans Teknup > Réglages
+4. **Créer une page** et ajouter le shortcode `[teknup_app]`
+5. **C'est prêt !** Vos utilisateurs peuvent masteriser leurs tracks
 
 👉 **[Guide d'installation détaillé](INSTALLATION.md)**
 
