@@ -7,6 +7,7 @@ import axios from 'axios';
 import UploadApp from './Upload/UploadApp';
 import DashboardApp from './Dashboard/DashboardApp';
 import HistoryApp from './Dashboard/HistoryApp';
+import PlansApp from './Plans/PlansApp';
 
 const MainApp = () => {
     const [activeView, setActiveView] = useState('dashboard');
@@ -35,6 +36,8 @@ const MainApp = () => {
                 return <UploadApp subscription={subscription} onNavigate={setActiveView} />;
             case 'history':
                 return <HistoryApp onNavigate={setActiveView} />;
+            case 'plans':
+                return <PlansApp subscription={subscription} onNavigate={setActiveView} />;
             case 'dashboard':
             default:
                 return <DashboardApp subscription={subscription} onNavigate={setActiveView} />;
@@ -84,6 +87,13 @@ const MainApp = () => {
                 >
                     <span className="teknup-nav-icon">📜</span>
                     Historique
+                </button>
+                <button
+                    className={`teknup-nav-button ${activeView === 'plans' ? 'active' : ''}`}
+                    onClick={() => setActiveView('plans')}
+                >
+                    <span className="teknup-nav-icon">💎</span>
+                    Plans
                 </button>
             </nav>
 

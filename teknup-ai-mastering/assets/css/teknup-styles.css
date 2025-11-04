@@ -329,3 +329,227 @@
         gap: 10px;
     }
 }
+
+/* Plans Page Styles */
+.teknup-plans-app {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.teknup-current-plan-info {
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(220, 20, 60, 0.1));
+    border: 1px solid rgba(220, 20, 60, 0.3);
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.teknup-current-plan-info strong {
+    color: var(--teknup-red);
+}
+
+.teknup-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.teknup-plan-card {
+    position: relative;
+    background: var(--teknup-bg-card);
+    border: 2px solid rgba(220, 20, 60, 0.3);
+    border-radius: 16px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.teknup-plan-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--teknup-red-dark), var(--teknup-red));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.teknup-plan-card:hover {
+    border-color: var(--teknup-red);
+    box-shadow: 0 12px 48px rgba(220, 20, 60, 0.3);
+    transform: translateY(-5px);
+}
+
+.teknup-plan-card:hover::before {
+    opacity: 1;
+}
+
+.teknup-plan-card.current-plan {
+    border-color: var(--teknup-red);
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.1), rgba(20, 20, 20, 0.95));
+}
+
+.teknup-plan-card.current-plan::before {
+    opacity: 1;
+}
+
+.teknup-plan-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: linear-gradient(135deg, var(--teknup-red-dark), var(--teknup-red));
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.teknup-plan-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.teknup-plan-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--teknup-red);
+    margin: 0 0 15px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.teknup-plan-price {
+    margin: 15px 0;
+}
+
+.teknup-plan-price .price-amount {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--teknup-text-white);
+    background: linear-gradient(135deg, var(--teknup-red-dark), var(--teknup-red-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.teknup-plan-price .price-period {
+    font-size: 16px;
+    color: var(--teknup-text-gray);
+    margin-left: 5px;
+}
+
+.teknup-plan-limit {
+    font-size: 14px;
+    color: var(--teknup-text-gray);
+    margin: 10px 0 0 0;
+}
+
+.teknup-plan-features {
+    flex: 1;
+    margin: 20px 0;
+}
+
+.teknup-plan-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.teknup-plan-features li {
+    padding: 12px 0;
+    color: var(--teknup-text-gray);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.teknup-plan-features li:last-child {
+    border-bottom: none;
+}
+
+.teknup-plan-features .feature-icon {
+    color: var(--teknup-red);
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.teknup-plan-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.teknup-button-primary,
+.teknup-button-secondary {
+    display: block;
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.teknup-button-primary {
+    background: linear-gradient(135deg, var(--teknup-red-dark), var(--teknup-red));
+    color: white;
+}
+
+.teknup-button-primary:hover {
+    background: linear-gradient(135deg, var(--teknup-red), var(--teknup-red-light));
+    box-shadow: 0 6px 24px rgba(220, 20, 60, 0.4);
+    transform: translateY(-2px);
+}
+
+.teknup-button-secondary {
+    background: rgba(220, 20, 60, 0.1);
+    color: var(--teknup-text-gray);
+    border: 2px solid rgba(220, 20, 60, 0.3);
+    cursor: not-allowed;
+}
+
+.teknup-plans-note {
+    margin-top: 30px;
+    text-align: center;
+    background: rgba(220, 20, 60, 0.05);
+    border: 1px solid rgba(220, 20, 60, 0.2);
+}
+
+.teknup-plans-note strong {
+    color: var(--teknup-red);
+}
+
+/* Responsive pour Plans */
+@media (max-width: 768px) {
+    .teknup-plans-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .teknup-plan-card {
+        padding: 24px;
+    }
+
+    .teknup-plan-name {
+        font-size: 20px;
+    }
+
+    .teknup-plan-price .price-amount {
+        font-size: 36px;
+    }
+}

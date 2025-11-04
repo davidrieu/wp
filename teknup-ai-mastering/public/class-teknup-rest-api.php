@@ -106,6 +106,13 @@ class Teknup_REST_API {
             'callback' => array($this, 'get_user_stats'),
             'permission_callback' => array($this, 'check_user_permission'),
         ));
+
+        // Obtenir la liste des plans d'abonnement disponibles
+        register_rest_route(self::NAMESPACE, '/plans', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'get_available_plans'),
+            'permission_callback' => array($this, 'check_user_permission'),
+        ));
     }
 
     /**
@@ -407,6 +414,67 @@ class Teknup_REST_API {
         $stats = $job_manager->get_user_stats($user_id);
 
         return new WP_REST_Response($stats, 200);
+    }
+
+    /**
+     * Obtenir la liste des plans d'abonnement disponibles
+     */
+    public function get_available_plans(WP_REST_Request $request) {
+        $user_id = get_current_user_id();
+        $subscription_manager = Teknup_Subscription_Manager::get_instance();
+
+        // Récupérer le plan actuel de l'utilisateur
+        $current_plan = $subscription_manager->get_user_plan($user_id);
+
+        // Récupérer les IDs des produits Teknup
+        $product_ids = get_option('teknup_product_ids', array());
+
+        if (empty($product_ids)) {
+            return new WP_REST_Response(array(
+                'success' => false,
+                'message' => __('Aucun plan disponible. Veuillez contacter l\'administrateur.', 'teknup-ai-mastering'),
+                'plans' => array(),
+            ), 200);
+        }
+
+        $plans = array();
+
+        foreach ($product_ids as $plan_slug => $product_id) {
+            $product = wc_get_product($product_id);
+
+            if (!$product) {
+                continue;
+            }
+
+            $plan_info = $subscription_manager->get_plan_info($plan_slug);
+
+            if (!$plan_info) {
+                continue;
+            }
+
+            $plans[] = array(
+                'slug' => $plan_slug,
+                'name' => $plan_info['name'],
+                'price' => $product->get_price(),
+                'price_html' => $product->get_price_html(),
+                'limit' => $plan_info['limit'],
+                'features' => $plan_info['features'],
+                'product_url' => get_permalink($product_id),
+                'is_current' => $current_plan === $plan_slug,
+                'description' => $product->get_short_description(),
+            );
+        }
+
+        // Trier par prix
+        usort($plans, function($a, $b) {
+            return floatval($a['price']) - floatval($b['price']);
+        });
+
+        return new WP_REST_Response(array(
+            'success' => true,
+            'plans' => $plans,
+            'current_plan' => $current_plan,
+        ), 200);
     }
 
     /**
