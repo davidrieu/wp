@@ -6,6 +6,15 @@ Plugin WordPress complet pour un service SaaS de mastering audio professionnel d
 
 Teknup AI Mastering permet aux utilisateurs d'uploader leurs morceaux et de recevoir un mastering de qualité studio en moins d'une minute grâce à l'IA Dolby.io. Le plugin s'intègre complètement avec WooCommerce et WooCommerce Subscriptions pour gérer les abonnements et les paiements.
 
+## ⚡ Installation rapide
+
+1. **Installer le plugin** via Extensions > Ajouter dans WordPress
+2. **Configurer la clé API** Dolby.io dans Teknup > Réglages
+3. **Créer une page** et ajouter le shortcode `[teknup_app]`
+4. **C'est prêt !** Vos utilisateurs peuvent masteriser leurs tracks
+
+👉 **[Guide d'installation détaillé](INSTALLATION.md)**
+
 ## ✨ Fonctionnalités principales
 
 ### Pour les utilisateurs
@@ -232,21 +241,59 @@ Endpoints disponibles (namespace `teknup/v1`) :
 - Jamais exposée côté client
 - Jamais loggée (même en debug)
 
-## 📱 Intégration WooCommerce
+## 📱 Utilisation avec Shortcodes
 
-Le plugin s'intègre dans l'espace "Mon compte" de WooCommerce avec trois nouveaux onglets :
+### Shortcode principal (Recommandé)
+
+Ajoutez simplement ce shortcode sur n'importe quelle page WordPress :
+
+```
+[teknup_app]
+```
+
+Cela affichera l'application complète avec :
+- ✅ Header avec informations du plan et quota
+- ✅ Navigation intégrée (Dashboard, Upload, Historique)
+- ✅ Interface utilisateur complète
+- ✅ Responsive mobile
+
+### Shortcodes individuels
+
+Vous pouvez aussi utiliser les shortcodes séparément pour plus de flexibilité :
+
+```
+[teknup_dashboard]  // Dashboard uniquement
+[teknup_upload]     // Interface d'upload uniquement
+[teknup_history]    // Historique des jobs uniquement
+```
+
+### Exemples d'utilisation
+
+**Page complète "Mon Studio"**
+```
+[teknup_app]
+```
+
+**Page dédiée "Upload"**
+```
+<h2>Uploadez votre track</h2>
+[teknup_upload]
+```
+
+**Widget sidebar "Stats"**
+```
+[teknup_dashboard]
+```
+
+### Intégration WooCommerce (Automatique)
+
+Le plugin s'intègre automatiquement dans l'espace "Mon compte" de WooCommerce avec trois nouveaux onglets :
 
 1. **Teknup Dashboard** : Vue d'ensemble et statistiques
 2. **Upload** : Interface d'upload et de paramétrage
 3. **Historique** : Liste de tous les jobs avec filtres
 
-### Shortcodes disponibles
-
-```php
-[teknup_dashboard]  // Dashboard utilisateur
-[teknup_upload]     // Interface d'upload
-[teknup_history]    // Historique des jobs
-```
+> Les deux méthodes (shortcode et WooCommerce) fonctionnent simultanément
 
 ## 🛠️ Développement
 
