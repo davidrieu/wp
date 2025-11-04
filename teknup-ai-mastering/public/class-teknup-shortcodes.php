@@ -34,6 +34,7 @@ class Teknup_Shortcodes {
         add_shortcode('teknup_upload', array($this, 'upload_shortcode'));
         add_shortcode('teknup_dashboard', array($this, 'dashboard_shortcode'));
         add_shortcode('teknup_history', array($this, 'history_shortcode'));
+        add_shortcode('teknup_debug', array($this, 'debug_shortcode'));
     }
 
     /**
@@ -157,6 +158,111 @@ class Teknup_Shortcodes {
 
         ob_start();
         include TEKNUP_PLUGIN_DIR . 'public/partials/history.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Shortcode de debug pour vérifier la configuration
+     * Usage: [teknup_debug]
+     */
+    public function debug_shortcode($atts) {
+        if (!current_user_can('manage_options')) {
+            return '<div class="teknup-card"><p>Accès réservé aux administrateurs.</p></div>';
+        }
+
+        ob_start();
+        ?>
+        <div class="teknup-debug-page" style="background: #0a0a0a; color: #fff; padding: 30px; font-family: monospace;">
+            <h1 style="color: #DC143C; margin-bottom: 20px;">🔧 Teknup Debug</h1>
+
+            <div style="background: rgba(20,20,20,0.95); border: 1px solid rgba(220,20,60,0.3); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                <h2 style="color: #DC143C; margin-top: 0;">Produits WooCommerce</h2>
+                <?php
+                $product_ids = get_option('teknup_product_ids', array());
+                if (empty($product_ids)) {
+                    echo '<p style="color: #ff6b6b;">❌ Aucun produit trouvé. Allez dans Teknup > Réglages pour les créer.</p>';
+                } else {
+                    echo '<p style="color: #51cf66;">✅ ' . count($product_ids) . ' produits trouvés</p>';
+                    echo '<ul style="list-style: none; padding: 0;">';
+                    foreach ($product_ids as $slug => $product_id) {
+                        $product = wc_get_product($product_id);
+                        if ($product) {
+                            echo '<li style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">';
+                            echo '<strong style="color: #DC143C;">' . $slug . '</strong>: ';
+                            echo $product->get_name() . ' (' . $product->get_price() . '€) - ';
+                            echo '<a href="' . get_permalink($product_id) . '" target="_blank" style="color: #51cf66;">Voir</a>';
+                            echo '</li>';
+                        } else {
+                            echo '<li style="padding: 8px 0; color: #ff6b6b;">' . $slug . ': Produit introuvable (ID: ' . $product_id . ')</li>';
+                        }
+                    }
+                    echo '</ul>';
+                }
+                ?>
+            </div>
+
+            <div style="background: rgba(20,20,20,0.95); border: 1px solid rgba(220,20,60,0.3); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                <h2 style="color: #DC143C; margin-top: 0;">Test API REST /plans</h2>
+                <?php
+                if (is_user_logged_in()) {
+                    $user_id = get_current_user_id();
+                    $request = new WP_REST_Request('GET', '/teknup/v1/plans');
+                    $request->set_header('X-WP-Nonce', wp_create_nonce('wp_rest'));
+
+                    $rest_api = Teknup_REST_API::get_instance();
+                    $response = $rest_api->get_available_plans($request);
+
+                    if (is_wp_error($response)) {
+                        echo '<p style="color: #ff6b6b;">❌ Erreur: ' . $response->get_error_message() . '</p>';
+                    } else {
+                        $data = $response->get_data();
+                        echo '<pre style="background: #000; padding: 15px; border-radius: 4px; overflow-x: auto;">';
+                        echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                        echo '</pre>';
+                    }
+                } else {
+                    echo '<p style="color: #ff6b6b;">❌ Vous devez être connecté</p>';
+                }
+                ?>
+            </div>
+
+            <div style="background: rgba(20,20,20,0.95); border: 1px solid rgba(220,20,60,0.3); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                <h2 style="color: #DC143C; margin-top: 0;">Votre Abonnement</h2>
+                <?php
+                if (is_user_logged_in()) {
+                    $user_id = get_current_user_id();
+                    $subscription_manager = Teknup_Subscription_Manager::get_instance();
+                    $sub_info = $subscription_manager->get_user_subscription_info($user_id);
+
+                    echo '<pre style="background: #000; padding: 15px; border-radius: 4px; overflow-x: auto;">';
+                    echo json_encode($sub_info, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                    echo '</pre>';
+                } else {
+                    echo '<p style="color: #ff6b6b;">❌ Vous devez être connecté</p>';
+                }
+                ?>
+            </div>
+
+            <div style="background: rgba(20,20,20,0.95); border: 1px solid rgba(220,20,60,0.3); border-radius: 8px; padding: 20px;">
+                <h2 style="color: #DC143C; margin-top: 0;">Bundle JavaScript</h2>
+                <?php
+                $bundle_path = TEKNUP_PLUGIN_DIR . 'public/js/app.bundle.js';
+                if (file_exists($bundle_path)) {
+                    $size = filesize($bundle_path);
+                    $date = date('Y-m-d H:i:s', filemtime($bundle_path));
+                    echo '<p style="color: #51cf66;">✅ Bundle trouvé</p>';
+                    echo '<ul style="list-style: none; padding: 0;">';
+                    echo '<li>Taille: ' . number_format($size / 1024, 2) . ' KB</li>';
+                    echo '<li>Modifié: ' . $date . '</li>';
+                    echo '<li>URL: <a href="' . TEKNUP_PLUGIN_URL . 'public/js/app.bundle.js" target="_blank" style="color: #51cf66;">Ouvrir</a></li>';
+                    echo '</ul>';
+                } else {
+                    echo '<p style="color: #ff6b6b;">❌ Bundle introuvable. Exécutez "npm run build".</p>';
+                }
+                ?>
+            </div>
+        </div>
+        <?php
         return ob_get_clean();
     }
 }
